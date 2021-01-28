@@ -1,0 +1,19 @@
+{
+  "name": "test-elm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amit-singhs/test-elm.git"
+  },
+  "author": "Ammit",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/amit-singhs/test-elm/issues"
+  },
+  "homepage": "https://github.com/amit-singhs/test-elm#readme"
+}
