@@ -10,10 +10,13 @@
     "type": "git",
     "url": "git+https://github.com/amit-singhs/test-elm.git"
   },
-  "author": "Ammit",
-  "license": "ISC",
+  "author": "Amit",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/amit-singhs/test-elm/issues"
   },
-  "homepage": "https://github.com/amit-singhs/test-elm#readme"
+  "homepage": "https://github.com/amit-singhs/test-elm#readme",
+  "devDependencies": {
+    "elm": "^0.19.1-3"
+  }
 }
