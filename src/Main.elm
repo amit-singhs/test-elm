@@ -1,5 +1,11 @@
 module Main exposing (..)
 
-import Html exposing (text)
+import Html exposing (div, text)
+import Html.Attributes exposing (attribute)
 
-main = text "Hello World, My First Elm Program."
+
+main =
+    div []
+        [ div [] [ text "Hello" ]
+        , div [] [ text "Hello World" ]
+        ]
