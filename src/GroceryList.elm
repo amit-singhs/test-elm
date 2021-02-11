@@ -89,5 +89,6 @@ view model =
             [ input [ placeholder "Enter first number", onInput UpdateA ] []
             , input [ placeholder "Enter Second number", onInput UpdateB ] []
             , div [] [ text (String.fromInt model.result) ]
+            , div [] [ text "Amit's simple calculator" ]
             ]
         ]
