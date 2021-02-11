@@ -74,9 +74,24 @@ view : Model -> Html Msg
 view model =
     div []
         [ div []
-            [ input [ placeholder "Name", value model.name, onInput NameUpdate ] []
-            , input [ placeholder "Password", type_ "password", onInput PasswordUpdate ] []
-            , input [ placeholder "Password again", type_ "password", onInput PasswordAgainUpdate ] []
+            [ input
+                [ placeholder "Name"
+                , value model.name
+                , onInput NameUpdate
+                ]
+                []
+            , input
+                [ placeholder "Password"
+                , type_ "password"
+                , onInput PasswordUpdate
+                ]
+                []
+            , input
+                [ placeholder "Password again"
+                , type_ "password"
+                , onInput PasswordAgainUpdate
+                ]
+                []
             , button [] [ text "Submit" ]
             ]
         , div [] [ text model.validationMessage ]
