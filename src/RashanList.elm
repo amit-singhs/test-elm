@@ -1,7 +1,7 @@
 module RashanList exposing (..)
 
 import Browser
-import Html exposing (Html, a, div, text)
+import Html exposing (Html, div, text)
 import List exposing (..)
 import Main exposing (Model, init, update, view)
 
@@ -19,16 +19,13 @@ main =
 
 
 type alias Model =
-    { shoppinglist : List String }
+    { shoppingList : List String }
 
 
 init : Model
 init =
     { shoppingList = [ "My", "name", "is", "Amit" ]
     }
-
-
-
 
 
 type Msg
