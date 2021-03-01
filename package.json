@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "elm make src/RashanList.elm"
+    "build": "elm make src/RashanList.elm",
+    "start": "npx elm-live src/RashanList.elm --hot --start-page=public/index.html -- --debug --output=public/main.js"
   },
   "repository": {
     "type": "git",
