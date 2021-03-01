@@ -1,9 +1,9 @@
 module RashanList exposing (..)
 
 import Browser
-import Html exposing (Html, button, del, div, input, p, text)
-import Html.Attributes exposing (id, placeholder, value)
-import Html.Events exposing (onClick, onInput)
+import Element exposing (..)
+import Element.Background as Background
+import Html exposing (Html)
 import List exposing (..)
 import Main exposing (Model, init, update, view)
 
@@ -85,28 +85,67 @@ update msg model =
 --View
 
 
-view : Model -> Html Msg
+bgcolor1 =
+    Background.color <| rgb255 255 55 55
+
+
+bgcolor2 =
+    Background.color <| rgb255 55 55 255
+
+
+view : Model -> Html msg
 view model =
-    div []
-        [ div []
-            [ input [ placeholder "Enter item", value model.newItem, onInput UpdateNewItem ] []
-            , button [ onClick Additem ] [ text "Add item" ]
-            , div [] <|
-                renderToList <|
-                    sortBy .id model.shoppingList
-            ]
+    layout
+        [ width fill
+        , height fill
         ]
+    <|
+        row
+            [ Background.color <| rgb255 23 232 65
+            , width fill
+            ]
+            [ column
+                [ width fill
+                , height fill
+                ]
+                [ row [] [ text "Rashan List" ]
+                , row [ height fill ] [ text "" ]
+                ]
+            , column [ width fill ]
+                [ row [] [ text "Item 1" ]
+                , row [] [ text "Item 2" ]
+                , row [] [ text "Item 3" ]
+                , row [] [ text "Item 4" ]
+                ]
+            ]
 
 
-renderToList : List Item -> List (Html Msg)
-renderToList xs =
-    case xs of
-        [] ->
-            []
 
-        item :: tail ->
-            if item.isPurchased == True then
-                p [ onClick (ItemPurchased item) ] [ text item.label ] :: renderToList tail
+{-
+   view2 : Model -> Html Msg
+   view2 model =
+       div []
+           [ div []
+               [ input [ placeholder "Enter item", value model.newItem, onInput UpdateNewItem ] []
+               , button [ onClick Additem ] [ Html.text "Add item" ]
+               , div [] <|
+                   renderToList <|
+                       sortBy .id model.shoppingList
+               ]
+           ]
 
-            else
-                p [ onClick (ItemUnPurchased item) ] [ del [] [ text item.label ] ] :: renderToList tail
+
+   renderToList : List Item -> List (Html Msg)
+   renderToList xs =
+       case xs of
+           [] ->
+               []
+
+           item :: tail ->
+               if item.isPurchased == True then
+                   p [ onClick (ItemPurchased item) ] [ Html.text item.label ] :: renderToList tail
+
+               else
+                   p [ onClick (ItemUnPurchased item) ] [ del [] [ Html.text item.label ] ] :: renderToList tail
+
+-}
