@@ -3,7 +3,11 @@ module RashanList exposing (..)
 import Browser
 import Element exposing (..)
 import Element.Background as Background
-import Html exposing (Html)
+import Element.Border as Border
+import Element.Events as Events
+import Element.Font as Font
+import Element.Input as Input
+import Html exposing (Html, button, del, div, input, p)
 import List exposing (..)
 import Main exposing (Model, init, update, view)
 
@@ -36,7 +40,11 @@ type alias Model =
 
 init : Model
 init =
-    { shoppingList = []
+    { shoppingList =
+        [ { label = "Apples", isPurchased = False, id = 1 }
+        , { label = "Eggs", isPurchased = False, id = 2 }
+        , { label = "Bananas", isPurchased = False, id = 3 }
+        ]
     , newItem = ""
     , idCounter = 0
     }
@@ -93,59 +101,71 @@ bgcolor2 =
     Background.color <| rgb255 55 55 255
 
 
-view : Model -> Html msg
+
+--view : Model -> Html msg
+
+
 view model =
     layout
-        [ width fill
+        [ Background.color <| rgb255 212 244 246
+        , width fill
         , height fill
+        , padding 10
         ]
     <|
         row
-            [ Background.color <| rgb255 23 232 65
-            , width fill
+            [ width fill
             ]
             [ column
                 [ width fill
                 , height fill
+                , padding 5
                 ]
-                [ row [] [ text "Rashan List" ]
-                , row [ height fill ] [ text "" ]
+                [ row
+                    [ Font.color (Element.rgb255 56 125 138)
+                    , Font.size 36
+                    , Font.heavy
+                    , Font.family
+                        [ Font.external
+                            { name = "Libre Franklin"
+                            , url = "https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@800&display=swap"
+                            }
+                        , Font.sansSerif
+                        ]
+                    ]
+                    [ text "Rashan List" ]
+                , row
+                    []
+                    [ Input.text []
+                        { label = Input.labelHidden "Add new item"
+                        , onChange = UpdateNewItem
+                        , placeholder = Just (Input.placeholder [] (text "Add new item"))
+                        , text = model.newItem
+                        }
+                    ]
                 ]
-            , column [ width fill ]
-                [ row [] [ text "Item 1" ]
-                , row [] [ text "Item 2" ]
-                , row [] [ text "Item 3" ]
-                , row [] [ text "Item 4" ]
+            , column
+                [ width fill
+                , padding 5
                 ]
-            ]
+                (renderToList (sortBy .id model.shoppingList))
+
+           
 
 
+renderToList xs =
+    case xs of
+        [] ->
+            [ row [] [ text "" ] ]
 
-{-
-   view2 : Model -> Html Msg
-   view2 model =
-       div []
-           [ div []
-               [ input [ placeholder "Enter item", value model.newItem, onInput UpdateNewItem ] []
-               , button [ onClick Additem ] [ Html.text "Add item" ]
-               , div [] <|
-                   renderToList <|
-                       sortBy .id model.shoppingList
-               ]
-           ]
+        item :: tail ->
+            if item.isPurchased == True then
+                row [ Events.onClick (ItemPurchased item) ] [ text item.label ] :: renderToList tail
 
-
-   renderToList : List Item -> List (Html Msg)
-   renderToList xs =
-       case xs of
-           [] ->
-               []
-
-           item :: tail ->
-               if item.isPurchased == True then
-                   p [ onClick (ItemPurchased item) ] [ Html.text item.label ] :: renderToList tail
-
-               else
-                   p [ onClick (ItemUnPurchased item) ] [ del [] [ Html.text item.label ] ] :: renderToList tail
-
--}
+            else
+                row
+                    [ Font.strike
+                    , Events.onClick (ItemUnPurchased item)
+                    ]
+                    [ text item.label ]
+                    :: renderToList tail
