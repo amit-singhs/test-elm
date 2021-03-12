@@ -43,7 +43,7 @@ init =
     { shoppingList =
         []
     , newItem = ""
-    , idCounter = 0
+    , idCounter = 1
     }
 
 
@@ -139,8 +139,27 @@ view model =
                         , placeholder = Just (Input.placeholder [] (text "Add new item"))
                         , text = model.newItem
                         }
-                    , row []
-                        [ Input.button []
+                    , row
+                        [ padding 10
+                        , Background.color <| Element.rgb255 212 244 246
+                        ]
+                        [ Input.button
+                            [ padding 5
+                            , Border.width 2
+                            , Border.rounded 6
+                            , Border.color <| Element.rgb255 110 150 150
+                            , Background.color <| Element.rgb255 180 200 200
+                            , Font.variant Font.smallCaps
+                            , mouseDown
+                                [ Background.color <| Element.rgb255 51 204 204
+                                , Border.color <| Element.rgb255 51 204 204
+                                , Font.color <| Element.rgb255 255 255 255
+                                ]
+                            , mouseOver
+                                [ Background.color <| Element.rgb255 255 255 255
+                                , Border.color <| Element.rgb255 180 180 190
+                                ]
+                            ]
                             { onPress = Just Additem
                             , label = text "Add item"
                             }
@@ -162,12 +181,12 @@ renderToList xs =
 
         item :: tail ->
             if item.isPurchased == True then
-                row [ Events.onClick (ItemPurchased item) ] [ text item.label ] :: renderToList tail
+                row [ Events.onClick (ItemPurchased item) ] [ text (String.fromInt item.id ++ ".) " ++ item.label) ] :: renderToList tail
 
             else
                 row
                     [ Font.strike
                     , Events.onClick (ItemUnPurchased item)
                     ]
-                    [ text item.label ]
+                    [ text (String.fromInt item.id ++ ".) " ++ item.label) ]
                     :: renderToList tail
