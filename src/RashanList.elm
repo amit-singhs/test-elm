@@ -142,6 +142,12 @@ view model =
                         , placeholder = Just (Input.placeholder [] (text "Add new item"))
                         , text = model.newItem
                         }
+                    , row []
+                        [ Input.button []
+                            { onPress = Just Additem
+                            , label = text "Add item"
+                            }
+                        ]
                     ]
                 ]
             , column
@@ -149,8 +155,7 @@ view model =
                 , padding 5
                 ]
                 (renderToList (sortBy .id model.shoppingList))
-
-           
+            ]
 
 
 renderToList xs =
