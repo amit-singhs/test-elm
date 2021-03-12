@@ -41,10 +41,7 @@ type alias Model =
 init : Model
 init =
     { shoppingList =
-        [ { label = "Apples", isPurchased = False, id = 1 }
-        , { label = "Eggs", isPurchased = False, id = 2 }
-        , { label = "Bananas", isPurchased = False, id = 3 }
-        ]
+        []
     , newItem = ""
     , idCounter = 0
     }
