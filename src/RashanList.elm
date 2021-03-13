@@ -62,11 +62,16 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Additem ->
-            { model
-                | shoppingList = Item model.newItem True model.idCounter :: model.shoppingList
-                , newItem = ""
-                , idCounter = model.idCounter + 1
-            }
+            case model.newItem of
+                "" ->
+                    model
+
+                s ->
+                    { model
+                        | shoppingList = Item s True model.idCounter :: model.shoppingList
+                        , newItem = ""
+                        , idCounter = model.idCounter + 1
+                    }
 
         UpdateNewItem inpTemp ->
             { model | newItem = inpTemp }
@@ -181,11 +186,17 @@ renderToList xs =
 
         item :: tail ->
             if item.isPurchased == True then
-                row [ Events.onClick (ItemPurchased item) ] [ text (String.fromInt item.id ++ ".) " ++ item.label) ] :: renderToList tail
+                row
+                    [ padding 6
+                    , Events.onClick (ItemPurchased item)
+                    ]
+                    [ text (String.fromInt item.id ++ ".) " ++ item.label) ]
+                    :: renderToList tail
 
             else
                 row
-                    [ Font.strike
+                    [ padding 6
+                    , Font.strike
                     , Events.onClick (ItemUnPurchased item)
                     ]
                     [ text (String.fromInt item.id ++ ".) " ++ item.label) ]
