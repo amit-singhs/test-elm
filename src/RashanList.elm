@@ -10,6 +10,7 @@ import Element.Input as Input
 import Html exposing (Html, button, del, div, input, p)
 import List exposing (..)
 import Main exposing (Model, init, update, view)
+import String
 
 
 
@@ -62,9 +63,9 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Additem ->
-            case model.newItem of
+            case String.trim model.newItem of
                 "" ->
-                    model
+                    { model | newItem = "" }
 
                 s ->
                     { model
