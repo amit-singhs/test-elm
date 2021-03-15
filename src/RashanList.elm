@@ -189,6 +189,8 @@ renderToList xs =
             if item.isPurchased == True then
                 row
                     [ padding 6
+                    , Font.color (Element.rgb255 30 170 160)
+                    , Font.heavy
                     , Events.onClick (ItemPurchased item)
                     ]
                     [ text (String.fromInt item.id ++ ".) " ++ item.label) ]
@@ -197,6 +199,8 @@ renderToList xs =
             else
                 row
                     [ padding 6
+                    , Font.color (Element.rgb255 56 125 138)
+                    , Font.heavy
                     , Font.strike
                     , Events.onClick (ItemUnPurchased item)
                     ]
