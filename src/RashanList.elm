@@ -109,8 +109,29 @@ bgcolor2 =
 
 
 view model =
+    let
+        backgroundImagePath =
+            "https://i.ytimg.com/vi/GlNbzAGZC2M/maxresdefault.jpg"
+
+        behindContentBlock =
+            behindContent <|
+                Element.image
+                    [ height fill
+                    , width fill
+                    ]
+                    { src = backgroundImagePath
+                    , description = "A grocery shop image"
+                    }
+    in
     layout
-        [ Background.color <| rgb255 212 244 246
+        -- [ Background.color <| rgb255 212 244 246
+        [ Background.gradient
+            { angle = 1.5708
+            , steps =
+                [ rgb255 251 171 126
+                , rgb255 247 206 104
+                ]
+            }
         , width fill
         , height fill
         , padding 10
@@ -139,7 +160,7 @@ view model =
                     [ text "Rashan List" ]
                 , row
                     []
-                    [ Input.text []
+                    [ Input.text [ Border.rounded 9 ]
                         { label = Input.labelHidden "Add new item"
                         , onChange = UpdateNewItem
                         , placeholder = Just (Input.placeholder [] (text "Add new item"))
@@ -147,7 +168,8 @@ view model =
                         }
                     , row
                         [ padding 10
-                        , Background.color <| Element.rgb255 212 244 246
+
+                        -- , Background.color <| Element.rgb255 212 244 246
                         ]
                         [ Input.button
                             [ padding 5
@@ -174,12 +196,15 @@ view model =
                 ]
             , column
                 [ width fill
+                , Border.rounded 12
+                , Background.color <| rgba255 255 255 255 0.9
                 , padding 5
                 ]
                 (renderToList (sortBy .id model.shoppingList))
             ]
 
 
+renderToList : List Item -> List (Element Msg)
 renderToList xs =
     case xs of
         [] ->
