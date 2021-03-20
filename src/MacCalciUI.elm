@@ -47,9 +47,6 @@ update msg model =
             { model | theNumber = model.theNumber + 1 }
 
 
-
---view : Model -> Element Msg
-
-
+view : Model -> Element Msg
 view model =
-    div [] [ row [] [] ]
+    row [] []

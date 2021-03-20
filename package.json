@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "elm make src/MacCalciUI.elm",
-    "start": "npx elm-live src/MacCalciUI.elm --hot --start-page=public/index.html -- --debug --output=public/main.js"
+    "build": "elm make src/MacCalciCore.elm",
+    "start": "npx elm-live src/MacCalciCore.elm --hot --start-page=public/index.html -- --debug --output=public/main.js"
   },
   "repository": {
     "type": "git",

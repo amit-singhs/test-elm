@@ -22,6 +22,8 @@ main =
 type alias Model =
     { firstNumber : Int
     , secondNumber : Int
+    , displayedNumber : Int
+    , mathematicalOperationIsOn : Bool
     , result : Int
     }
 
@@ -30,6 +32,8 @@ init : Model
 init =
     { firstNumber = 0
     , secondNumber = 0
+    , displayedNumber = 0
+    , mathematicalOperationIsOn = False
     , result = 0
     }
 
@@ -44,10 +48,25 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         AddNumbers ->
-            { model | result = model.firstNumber + model.secondNumber }
+            { model
+                | displayedNumber = 0
+                , mathematicalOperationIsOn = True
+                , result = model.firstNumber + model.secondNumber
+            }
 
         UpdateNumber num ->
-            { model | firstNumber = (model.firstNumber * 10) + num }
+            case model.mathematicalOperationIsOn of
+                False ->
+                    { model
+                        | displayedNumber = (model.displayedNumber * 10) + num
+                        , firstNumber = (model.displayedNumber * 10) + num
+                    }
+
+                True ->
+                    { model
+                        | displayedNumber = (model.displayedNumber * 10) + num
+                        , secondNumber = (model.displayedNumber * 10) + num
+                    }
 
         AllClearTextField ->
             { model | firstNumber = 0 }
@@ -58,7 +77,7 @@ view model =
     div []
         [ div []
             [ button [ onClick AllClearTextField ] [ text "AC" ]
-            , input [ placeholder "Enter number", value <| String.fromInt model.result ] []
+            , input [ placeholder "Enter number", value <| String.fromInt model.displayedNumber ] []
             ]
         , button [ onClick <| UpdateNumber 7 ] [ text "7" ]
         , button [ onClick <| UpdateNumber 8 ] [ text "8" ]
@@ -80,6 +99,6 @@ view model =
             [ button [ onClick <| UpdateNumber 0 ] [ text "0" ]
             , button [] [ text "." ]
             , button [] [ text "=" ]
-            , button [] [ text "+" ]
+            , button [ onClick AddNumbers ] [ text "+" ]
             ]
         ]

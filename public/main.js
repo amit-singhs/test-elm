@@ -80,6 +80,271 @@ function A9(fun, a, b, c, d, e, f, g, h, i) {
 console.warn('Compiled in DEBUG mode. Follow the advice at https://elm-lang.org/0.19.1/optimize for better performance and smaller assets.');
 
 
+// EQUALITY
+
+function _Utils_eq(x, y)
+{
+	for (
+		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
+		isEqual && (pair = stack.pop());
+		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
+		)
+	{}
+
+	return isEqual;
+}
+
+function _Utils_eqHelp(x, y, depth, stack)
+{
+	if (x === y)
+	{
+		return true;
+	}
+
+	if (typeof x !== 'object' || x === null || y === null)
+	{
+		typeof x === 'function' && _Debug_crash(5);
+		return false;
+	}
+
+	if (depth > 100)
+	{
+		stack.push(_Utils_Tuple2(x,y));
+		return true;
+	}
+
+	/**/
+	if (x.$ === 'Set_elm_builtin')
+	{
+		x = $elm$core$Set$toList(x);
+		y = $elm$core$Set$toList(y);
+	}
+	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
+	{
+		x = $elm$core$Dict$toList(x);
+		y = $elm$core$Dict$toList(y);
+	}
+	//*/
+
+	/**_UNUSED/
+	if (x.$ < 0)
+	{
+		x = $elm$core$Dict$toList(x);
+		y = $elm$core$Dict$toList(y);
+	}
+	//*/
+
+	for (var key in x)
+	{
+		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+var _Utils_equal = F2(_Utils_eq);
+var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
+
+
+
+// COMPARISONS
+
+// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
+// the particular integer values assigned to LT, EQ, and GT.
+
+function _Utils_cmp(x, y, ord)
+{
+	if (typeof x !== 'object')
+	{
+		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
+	}
+
+	/**/
+	if (x instanceof String)
+	{
+		var a = x.valueOf();
+		var b = y.valueOf();
+		return a === b ? 0 : a < b ? -1 : 1;
+	}
+	//*/
+
+	/**_UNUSED/
+	if (typeof x.$ === 'undefined')
+	//*/
+	/**/
+	if (x.$[0] === '#')
+	//*/
+	{
+		return (ord = _Utils_cmp(x.a, y.a))
+			? ord
+			: (ord = _Utils_cmp(x.b, y.b))
+				? ord
+				: _Utils_cmp(x.c, y.c);
+	}
+
+	// traverse conses until end of a list or a mismatch
+	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
+	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
+}
+
+var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
+var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
+var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
+var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
+
+var _Utils_compare = F2(function(x, y)
+{
+	var n = _Utils_cmp(x, y);
+	return n < 0 ? $elm$core$Basics$LT : n ? $elm$core$Basics$GT : $elm$core$Basics$EQ;
+});
+
+
+// COMMON VALUES
+
+var _Utils_Tuple0_UNUSED = 0;
+var _Utils_Tuple0 = { $: '#0' };
+
+function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
+function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
+
+function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
+function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
+
+function _Utils_chr_UNUSED(c) { return c; }
+function _Utils_chr(c) { return new String(c); }
+
+
+// RECORDS
+
+function _Utils_update(oldRecord, updatedFields)
+{
+	var newRecord = {};
+
+	for (var key in oldRecord)
+	{
+		newRecord[key] = oldRecord[key];
+	}
+
+	for (var key in updatedFields)
+	{
+		newRecord[key] = updatedFields[key];
+	}
+
+	return newRecord;
+}
+
+
+// APPEND
+
+var _Utils_append = F2(_Utils_ap);
+
+function _Utils_ap(xs, ys)
+{
+	// append Strings
+	if (typeof xs === 'string')
+	{
+		return xs + ys;
+	}
+
+	// append Lists
+	if (!xs.b)
+	{
+		return ys;
+	}
+	var root = _List_Cons(xs.a, ys);
+	xs = xs.b
+	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		curr = curr.b = _List_Cons(xs.a, ys);
+	}
+	return root;
+}
+
+
+
+var _List_Nil_UNUSED = { $: 0 };
+var _List_Nil = { $: '[]' };
+
+function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
+function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
+
+
+var _List_cons = F2(_List_Cons);
+
+function _List_fromArray(arr)
+{
+	var out = _List_Nil;
+	for (var i = arr.length; i--; )
+	{
+		out = _List_Cons(arr[i], out);
+	}
+	return out;
+}
+
+function _List_toArray(xs)
+{
+	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		out.push(xs.a);
+	}
+	return out;
+}
+
+var _List_map2 = F3(function(f, xs, ys)
+{
+	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
+	{
+		arr.push(A2(f, xs.a, ys.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map3 = F4(function(f, xs, ys, zs)
+{
+	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A3(f, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map4 = F5(function(f, ws, xs, ys, zs)
+{
+	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
+{
+	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_sortBy = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		return _Utils_cmp(f(a), f(b));
+	}));
+});
+
+var _List_sortWith = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		var ord = A2(f, a, b);
+		return ord === $elm$core$Basics$EQ ? 0 : ord === $elm$core$Basics$LT ? -1 : 1;
+	}));
+});
+
+
+
 var _JsArray_empty = [];
 
 function _JsArray_singleton(value)
@@ -525,271 +790,6 @@ function _Debug_regionToString(region)
 	}
 	return 'on lines ' + region.start.line + ' through ' + region.end.line;
 }
-
-
-
-// EQUALITY
-
-function _Utils_eq(x, y)
-{
-	for (
-		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
-		isEqual && (pair = stack.pop());
-		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
-		)
-	{}
-
-	return isEqual;
-}
-
-function _Utils_eqHelp(x, y, depth, stack)
-{
-	if (x === y)
-	{
-		return true;
-	}
-
-	if (typeof x !== 'object' || x === null || y === null)
-	{
-		typeof x === 'function' && _Debug_crash(5);
-		return false;
-	}
-
-	if (depth > 100)
-	{
-		stack.push(_Utils_Tuple2(x,y));
-		return true;
-	}
-
-	/**/
-	if (x.$ === 'Set_elm_builtin')
-	{
-		x = $elm$core$Set$toList(x);
-		y = $elm$core$Set$toList(y);
-	}
-	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
-	{
-		x = $elm$core$Dict$toList(x);
-		y = $elm$core$Dict$toList(y);
-	}
-	//*/
-
-	/**_UNUSED/
-	if (x.$ < 0)
-	{
-		x = $elm$core$Dict$toList(x);
-		y = $elm$core$Dict$toList(y);
-	}
-	//*/
-
-	for (var key in x)
-	{
-		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-var _Utils_equal = F2(_Utils_eq);
-var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
-
-
-
-// COMPARISONS
-
-// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
-// the particular integer values assigned to LT, EQ, and GT.
-
-function _Utils_cmp(x, y, ord)
-{
-	if (typeof x !== 'object')
-	{
-		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
-	}
-
-	/**/
-	if (x instanceof String)
-	{
-		var a = x.valueOf();
-		var b = y.valueOf();
-		return a === b ? 0 : a < b ? -1 : 1;
-	}
-	//*/
-
-	/**_UNUSED/
-	if (typeof x.$ === 'undefined')
-	//*/
-	/**/
-	if (x.$[0] === '#')
-	//*/
-	{
-		return (ord = _Utils_cmp(x.a, y.a))
-			? ord
-			: (ord = _Utils_cmp(x.b, y.b))
-				? ord
-				: _Utils_cmp(x.c, y.c);
-	}
-
-	// traverse conses until end of a list or a mismatch
-	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
-	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
-}
-
-var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
-var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
-var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
-var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
-
-var _Utils_compare = F2(function(x, y)
-{
-	var n = _Utils_cmp(x, y);
-	return n < 0 ? $elm$core$Basics$LT : n ? $elm$core$Basics$GT : $elm$core$Basics$EQ;
-});
-
-
-// COMMON VALUES
-
-var _Utils_Tuple0_UNUSED = 0;
-var _Utils_Tuple0 = { $: '#0' };
-
-function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
-function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
-
-function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
-function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
-
-function _Utils_chr_UNUSED(c) { return c; }
-function _Utils_chr(c) { return new String(c); }
-
-
-// RECORDS
-
-function _Utils_update(oldRecord, updatedFields)
-{
-	var newRecord = {};
-
-	for (var key in oldRecord)
-	{
-		newRecord[key] = oldRecord[key];
-	}
-
-	for (var key in updatedFields)
-	{
-		newRecord[key] = updatedFields[key];
-	}
-
-	return newRecord;
-}
-
-
-// APPEND
-
-var _Utils_append = F2(_Utils_ap);
-
-function _Utils_ap(xs, ys)
-{
-	// append Strings
-	if (typeof xs === 'string')
-	{
-		return xs + ys;
-	}
-
-	// append Lists
-	if (!xs.b)
-	{
-		return ys;
-	}
-	var root = _List_Cons(xs.a, ys);
-	xs = xs.b
-	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		curr = curr.b = _List_Cons(xs.a, ys);
-	}
-	return root;
-}
-
-
-
-var _List_Nil_UNUSED = { $: 0 };
-var _List_Nil = { $: '[]' };
-
-function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
-function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
-
-
-var _List_cons = F2(_List_Cons);
-
-function _List_fromArray(arr)
-{
-	var out = _List_Nil;
-	for (var i = arr.length; i--; )
-	{
-		out = _List_Cons(arr[i], out);
-	}
-	return out;
-}
-
-function _List_toArray(xs)
-{
-	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		out.push(xs.a);
-	}
-	return out;
-}
-
-var _List_map2 = F3(function(f, xs, ys)
-{
-	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
-	{
-		arr.push(A2(f, xs.a, ys.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map3 = F4(function(f, xs, ys, zs)
-{
-	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A3(f, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map4 = F5(function(f, ws, xs, ys, zs)
-{
-	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
-{
-	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_sortBy = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		return _Utils_cmp(f(a), f(b));
-	}));
-});
-
-var _List_sortWith = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		var ord = A2(f, a, b);
-		return ord === $elm$core$Basics$EQ ? 0 : ord === $elm$core$Basics$LT ? -1 : 1;
-	}));
-});
 
 
 
@@ -4624,9 +4624,6 @@ function _Browser_application(impl)
 	var onUrlChange = impl.onUrlChange;
 	var onUrlRequest = impl.onUrlRequest;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
-key['elm-hot-nav-key'] = true
-key['elm-hot-nav-key'] = true
-key['elm-hot-nav-key'] = true
 
 	return _Browser_document({
 		setup: function(sendToApp)
@@ -4941,31 +4938,12 @@ function _Browser_load(url)
 		}
 	}));
 }
+var $elm$core$Basics$False = {$: 'False'};
+var $author$project$MacCalciCore$init = {displayedNumber: 0, firstNumber: 0, mathematicalOperationIsOn: false, result: 0, secondNumber: 0};
+var $elm$core$Basics$EQ = {$: 'EQ'};
+var $elm$core$Basics$GT = {$: 'GT'};
+var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$List$cons = _List_cons;
-var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
-var $elm$core$Array$foldr = F3(
-	function (func, baseCase, _v0) {
-		var tree = _v0.c;
-		var tail = _v0.d;
-		var helper = F2(
-			function (node, acc) {
-				if (node.$ === 'SubTree') {
-					var subTree = node.a;
-					return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
-				} else {
-					var values = node.a;
-					return A3($elm$core$Elm$JsArray$foldr, func, acc, values);
-				}
-			});
-		return A3(
-			$elm$core$Elm$JsArray$foldr,
-			helper,
-			A3($elm$core$Elm$JsArray$foldr, func, baseCase, tail),
-			tree);
-	});
-var $elm$core$Array$toList = function (array) {
-	return A3($elm$core$Array$foldr, $elm$core$List$cons, _List_Nil, array);
-};
 var $elm$core$Dict$foldr = F3(
 	function (func, acc, t) {
 		foldr:
@@ -5018,10 +4996,30 @@ var $elm$core$Set$toList = function (_v0) {
 	var dict = _v0.a;
 	return $elm$core$Dict$keys(dict);
 };
-var $elm$core$Basics$EQ = {$: 'EQ'};
-var $elm$core$Basics$GT = {$: 'GT'};
-var $elm$core$Basics$LT = {$: 'LT'};
-var $author$project$RashanList$init = {idCounter: 0, newItem: '', shoppingList: _List_Nil};
+var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
+var $elm$core$Array$foldr = F3(
+	function (func, baseCase, _v0) {
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = F2(
+			function (node, acc) {
+				if (node.$ === 'SubTree') {
+					var subTree = node.a;
+					return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
+				} else {
+					var values = node.a;
+					return A3($elm$core$Elm$JsArray$foldr, func, acc, values);
+				}
+			});
+		return A3(
+			$elm$core$Elm$JsArray$foldr,
+			helper,
+			A3($elm$core$Elm$JsArray$foldr, func, baseCase, tail),
+			tree);
+	});
+var $elm$core$Array$toList = function (array) {
+	return A3($elm$core$Array$foldr, $elm$core$List$cons, _List_Nil, array);
+};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -5043,7 +5041,6 @@ var $elm$core$Result$Ok = function (a) {
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
-var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$Basics$add = _Basics_add;
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
@@ -10559,131 +10556,38 @@ var $elm$browser$Browser$sandbox = function (impl) {
 			view: impl.view
 		});
 };
-var $author$project$RashanList$Item = F3(
-	function (label, isPurchased, id) {
-		return {id: id, isPurchased: isPurchased, label: label};
-	});
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
-var $author$project$RashanList$update = F2(
+var $author$project$MacCalciCore$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
-			case 'Additem':
+			case 'AddNumbers':
 				return _Utils_update(
 					model,
-					{
-						idCounter: model.idCounter + 1,
-						newItem: '',
-						shoppingList: A2(
-							$elm$core$List$cons,
-							A3($author$project$RashanList$Item, model.newItem, true, model.idCounter),
-							model.shoppingList)
-					});
-			case 'UpdateNewItem':
-				var inpTemp = msg.a;
-				return _Utils_update(
-					model,
-					{newItem: inpTemp});
-			case 'ItemPurchased':
-				var item = msg.a;
-				return _Utils_update(
-					model,
-					{
-						shoppingList: A2(
-							$elm$core$List$cons,
-							_Utils_update(
-								item,
-								{isPurchased: false}),
-							A2(
-								$elm$core$List$filter,
-								function (it) {
-									return !_Utils_eq(item.id, it.id);
-								},
-								model.shoppingList))
-					});
+					{displayedNumber: 0, mathematicalOperationIsOn: true, result: model.firstNumber + model.secondNumber});
+			case 'UpdateNumber':
+				var num = msg.a;
+				var _v1 = model.mathematicalOperationIsOn;
+				if (!_v1) {
+					return _Utils_update(
+						model,
+						{displayedNumber: (model.displayedNumber * 10) + num, firstNumber: (model.displayedNumber * 10) + num});
+				} else {
+					return _Utils_update(
+						model,
+						{displayedNumber: (model.displayedNumber * 10) + num, secondNumber: (model.displayedNumber * 10) + num});
+				}
 			default:
-				var item = msg.a;
 				return _Utils_update(
 					model,
-					{
-						shoppingList: A2(
-							$elm$core$List$cons,
-							_Utils_update(
-								item,
-								{isPurchased: true}),
-							A2(
-								$elm$core$List$filter,
-								function (it) {
-									return !_Utils_eq(item.id, it.id);
-								},
-								model.shoppingList))
-					});
+					{firstNumber: 0});
 		}
 	});
-var $author$project$RashanList$Additem = {$: 'Additem'};
-var $author$project$RashanList$UpdateNewItem = function (a) {
-	return {$: 'UpdateNewItem', a: a};
+var $author$project$MacCalciCore$AddNumbers = {$: 'AddNumbers'};
+var $author$project$MacCalciCore$AllClearTextField = {$: 'AllClearTextField'};
+var $author$project$MacCalciCore$UpdateNumber = function (a) {
+	return {$: 'UpdateNumber', a: a};
 };
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
-var $author$project$RashanList$ItemPurchased = function (a) {
-	return {$: 'ItemPurchased', a: a};
-};
-var $author$project$RashanList$ItemUnPurchased = function (a) {
-	return {$: 'ItemUnPurchased', a: a};
-};
-var $elm$html$Html$del = _VirtualDom_node('del');
-var $author$project$RashanList$renderToList = function (xs) {
-	if (!xs.b) {
-		return _List_Nil;
-	} else {
-		var item = xs.a;
-		var tail = xs.b;
-		return item.isPurchased ? A2(
-			$elm$core$List$cons,
-			A2(
-				$elm$html$Html$p,
-				_List_fromArray(
-					[
-						$elm$html$Html$Events$onClick(
-						$author$project$RashanList$ItemPurchased(item))
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text(item.label)
-					])),
-			$author$project$RashanList$renderToList(tail)) : A2(
-			$elm$core$List$cons,
-			A2(
-				$elm$html$Html$p,
-				_List_fromArray(
-					[
-						$elm$html$Html$Events$onClick(
-						$author$project$RashanList$ItemUnPurchased(item))
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$del,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text(item.label)
-							]))
-					])),
-			$author$project$RashanList$renderToList(tail));
-	}
-};
-var $elm$core$List$sortBy = _List_sortBy;
-var $author$project$RashanList$view = function (model) {
+var $author$project$MacCalciCore$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_Nil,
@@ -10695,1637 +10599,204 @@ var $author$project$RashanList$view = function (model) {
 				_List_fromArray(
 					[
 						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$MacCalciCore$AllClearTextField)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('AC')
+							])),
+						A2(
 						$elm$html$Html$input,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$placeholder('Enter item'),
-								$elm$html$Html$Attributes$value(model.newItem),
-								$elm$html$Html$Events$onInput($author$project$RashanList$UpdateNewItem)
+								$elm$html$Html$Attributes$placeholder('Enter number'),
+								$elm$html$Html$Attributes$value(
+								$elm$core$String$fromInt(model.displayedNumber))
 							]),
-						_List_Nil),
+						_List_Nil)
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick(
+						$author$project$MacCalciCore$UpdateNumber(7))
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('7')
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick(
+						$author$project$MacCalciCore$UpdateNumber(8))
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('8')
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick(
+						$author$project$MacCalciCore$UpdateNumber(9))
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('9')
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('/')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
 						A2(
 						$elm$html$Html$button,
 						_List_fromArray(
 							[
-								$elm$html$Html$Events$onClick($author$project$RashanList$Additem)
+								$elm$html$Html$Events$onClick(
+								$author$project$MacCalciCore$UpdateNumber(4))
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('Add item')
+								$elm$html$Html$text('4')
 							])),
 						A2(
-						$elm$html$Html$div,
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$MacCalciCore$UpdateNumber(5))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('5')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$MacCalciCore$UpdateNumber(6))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('6')
+							])),
+						A2(
+						$elm$html$Html$button,
 						_List_Nil,
-						$author$project$RashanList$renderToList(
-							A2(
-								$elm$core$List$sortBy,
-								function ($) {
-									return $.id;
-								},
-								model.shoppingList)))
+						_List_fromArray(
+							[
+								$elm$html$Html$text('X')
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$MacCalciCore$UpdateNumber(1))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('1')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$MacCalciCore$UpdateNumber(2))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('2')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$MacCalciCore$UpdateNumber(3))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('3')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('-')
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$MacCalciCore$UpdateNumber(0))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('0')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('.')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('=')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$MacCalciCore$AddNumbers)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('+')
+							]))
 					]))
 			]));
 };
-var $author$project$RashanList$main = $elm$browser$Browser$sandbox(
-	{init: $author$project$RashanList$init, update: $author$project$RashanList$update, view: $author$project$RashanList$view});
-_Platform_export({'RashanList':{'init':$author$project$RashanList$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"RashanList.Msg","aliases":{"RashanList.Item":{"args":[],"type":"{ label : String.String, isPurchased : Basics.Bool, id : Basics.Int }"}},"unions":{"RashanList.Msg":{"args":[],"tags":{"Additem":[],"UpdateNewItem":["String.String"],"ItemPurchased":["RashanList.Item"],"ItemUnPurchased":["RashanList.Item"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});
-
-//////////////////// HMR BEGIN ////////////////////
-
-/*
-  MIT License http://www.opensource.org/licenses/mit-license.php
-  Original Author: Flux Xu @fluxxu
-*/
-
-/*
-    A note about the environment that this code runs in...
-
-    assumed globals:
-        - `module` (from Node.js module system and webpack)
-
-    assumed in scope after injection into the Elm IIFE:
-        - `scope` (has an 'Elm' property which contains the public Elm API)
-        - various functions defined by Elm which we have to hook such as `_Platform_initialize` and `_Scheduler_binding`
- */
-
-if (module.hot) {
-    (function () {
-        "use strict";
-
-        //polyfill for IE: https://github.com/fluxxu/elm-hot-loader/issues/16
-        if (typeof Object.assign != 'function') {
-            Object.assign = function (target) {
-                'use strict';
-                if (target == null) {
-                    throw new TypeError('Cannot convert undefined or null to object');
-                }
-
-                target = Object(target);
-                for (var index = 1; index < arguments.length; index++) {
-                    var source = arguments[index];
-                    if (source != null) {
-                        for (var key in source) {
-                            if (Object.prototype.hasOwnProperty.call(source, key)) {
-                                target[key] = source[key];
-                            }
-                        }
-                    }
-                }
-                return target;
-            };
-        }
-
-        // Elm 0.19.1 introduced a '$' prefix at the beginning of the symbols it emits,
-        // and we check for `Maybe.Just` because we expect it to be present in all Elm programs.
-        var elmVersion;
-        if (typeof elm$core$Maybe$Just !== 'undefined')
-            elmVersion = '0.19.0';
-        else if (typeof $elm$core$Maybe$Just !== 'undefined')
-            elmVersion = '0.19.1';
-        else
-            throw new Error("Could not determine Elm version");
-
-        function elmSymbol(symbol) {
-            try {
-                switch (elmVersion) {
-                    case '0.19.0':
-                        return eval(symbol);
-                    case '0.19.1':
-                        return eval('$' + symbol);
-                    default:
-                        throw new Error('Cannot resolve ' + symbol + '. Elm version unknown!')
-                }
-            } catch (e) {
-                if (e instanceof ReferenceError) {
-                    return undefined;
-                } else {
-                    throw e;
-                }
-            }
-        }
-
-        var instances = module.hot.data
-            ? module.hot.data.instances || {}
-            : {};
-        var uid = module.hot.data
-            ? module.hot.data.uid || 0
-            : 0;
-
-        if (Object.keys(instances).length === 0) {
-            log("[elm-hot] Enabled");
-        }
-
-        var cancellers = [];
-
-        // These 2 variables act as dynamically-scoped variables which are set only when the
-        // Elm module's hooked init function is called.
-        var initializingInstance = null;
-        var swappingInstance = null;
-
-        module.hot.accept();
-        module.hot.dispose(function (data) {
-            data.instances = instances;
-            data.uid = uid;
-
-            // Cleanup pending async tasks
-
-            // First, make sure that no new tasks can be started until we finish replacing the code
-            _Scheduler_binding = function () {
-                return _Scheduler_fail(new Error('[elm-hot] Inactive Elm instance.'))
-            };
-
-            // Second, kill pending tasks belonging to the old instance
-            if (cancellers.length) {
-                log('[elm-hot] Killing ' + cancellers.length + ' running processes...');
-                try {
-                    cancellers.forEach(function (cancel) {
-                        cancel();
-                    });
-                } catch (e) {
-                    console.warn('[elm-hot] Kill process error: ' + e.message);
-                }
-            }
-        });
-
-        function log(message) {
-            if (module.hot.verbose) {
-                console.log(message)
-            }
-        }
-
-        function getId() {
-            return ++uid;
-        }
-
-        function findPublicModules(parent, path) {
-            var modules = [];
-            for (var key in parent) {
-                var child = parent[key];
-                var currentPath = path ? path + '.' + key : key;
-                if ('init' in child) {
-                    modules.push({
-                        path: currentPath,
-                        module: child
-                    });
-                } else {
-                    modules = modules.concat(findPublicModules(child, currentPath));
-                }
-            }
-            return modules;
-        }
-
-        function registerInstance(domNode, flags, path, portSubscribes, portSends) {
-            var id = getId();
-
-            var instance = {
-                id: id,
-                path: path,
-                domNode: domNode,
-                flags: flags,
-                portSubscribes: portSubscribes,
-                portSends: portSends,
-                lastState: null // last Elm app state (root model)
-            };
-
-            return instances[id] = instance
-        }
-
-        function isFullscreenApp() {
-            // Returns true if the Elm app will take over the entire DOM body.
-            return typeof elmSymbol("elm$browser$Browser$application") !== 'undefined'
-                || typeof elmSymbol("elm$browser$Browser$document") !== 'undefined';
-        }
-
-        function wrapDomNode(node) {
-            // When embedding an Elm app into a specific DOM node, Elm will replace the provided
-            // DOM node with the Elm app's content. When the Elm app is compiled normally, the
-            // original DOM node is reused (its attributes and content changes, but the object
-            // in memory remains the same). But when compiled using `--debug`, Elm will completely
-            // destroy the original DOM node and instead replace it with 2 brand new nodes: one
-            // for your Elm app's content and the other for the Elm debugger UI. In this case,
-            // if you held a reference to the DOM node provided for embedding, it would be orphaned
-            // after Elm module initialization.
-            //
-            // So in order to make both cases consistent and isolate us from changes in how Elm
-            // does this, we will insert a dummy node to wrap the node for embedding and hold
-            // a reference to the dummy node.
-            //
-            // We will also put a tag on the dummy node so that the Elm developer knows who went
-            // behind their back and rudely put stuff in their DOM.
-            var dummyNode = document.createElement("div");
-            dummyNode.setAttribute("data-elm-hot", "true");
-            dummyNode.style.height = "inherit";
-            var parentNode = node.parentNode;
-            parentNode.replaceChild(dummyNode, node);
-            dummyNode.appendChild(node);
-            return dummyNode;
-        }
-
-        function wrapPublicModule(path, module) {
-            var originalInit = module.init;
-            if (originalInit) {
-                module.init = function (args) {
-                    var elm;
-                    var portSubscribes = {};
-                    var portSends = {};
-                    var domNode = null;
-                    var flags = null;
-                    if (typeof args !== 'undefined') {
-                        // normal case
-                        domNode = args['node'] && !isFullscreenApp()
-                            ? wrapDomNode(args['node'])
-                            : document.body;
-                        flags = args['flags'];
-                    } else {
-                        // rare case: Elm allows init to be called without any arguments at all
-                        domNode = document.body;
-                        flags = undefined
-                    }
-                    initializingInstance = registerInstance(domNode, flags, path, portSubscribes, portSends);
-                    elm = originalInit(args);
-                    wrapPorts(elm, portSubscribes, portSends);
-                    initializingInstance = null;
-                    return elm;
-                };
-            } else {
-                console.error("Could not find a public module to wrap at path " + path)
-            }
-        }
-
-        function swap(Elm, instance) {
-            log('[elm-hot] Hot-swapping module: ' + instance.path);
-
-            swappingInstance = instance;
-
-            // remove from the DOM everything that had been created by the old Elm app
-            var containerNode = instance.domNode;
-            while (containerNode.lastChild) {
-                containerNode.removeChild(containerNode.lastChild);
-            }
-
-            var m = getAt(instance.path.split('.'), Elm);
-            var elm;
-            if (m) {
-                // prepare to initialize the new Elm module
-                var args = {flags: instance.flags};
-                if (containerNode === document.body) {
-                    // fullscreen case: no additional args needed
-                } else {
-                    // embed case: provide a new node for Elm to use
-                    var nodeForEmbed = document.createElement("div");
-                    containerNode.appendChild(nodeForEmbed);
-                    args['node'] = nodeForEmbed;
-                }
-
-                elm = m.init(args);
-
-                Object.keys(instance.portSubscribes).forEach(function (portName) {
-                    if (portName in elm.ports && 'subscribe' in elm.ports[portName]) {
-                        var handlers = instance.portSubscribes[portName];
-                        if (!handlers.length) {
-                            return;
-                        }
-                        log('[elm-hot] Reconnect ' + handlers.length + ' handler(s) to port \''
-                            + portName + '\' (' + instance.path + ').');
-                        handlers.forEach(function (handler) {
-                            elm.ports[portName].subscribe(handler);
-                        });
-                    } else {
-                        delete instance.portSubscribes[portName];
-                        log('[elm-hot] Port was removed: ' + portName);
-                    }
-                });
-
-                Object.keys(instance.portSends).forEach(function (portName) {
-                    if (portName in elm.ports && 'send' in elm.ports[portName]) {
-                        log('[elm-hot] Replace old port send with the new send');
-                        instance.portSends[portName] = elm.ports[portName].send;
-                    } else {
-                        delete instance.portSends[portName];
-                        log('[elm-hot] Port was removed: ' + portName);
-                    }
-                });
-            } else {
-                log('[elm-hot] Module was removed: ' + instance.path);
-            }
-
-            swappingInstance = null;
-        }
-
-        function wrapPorts(elm, portSubscribes, portSends) {
-            var portNames = Object.keys(elm.ports || {});
-            //hook ports
-            if (portNames.length) {
-                // hook outgoing ports
-                portNames
-                    .filter(function (name) {
-                        return 'subscribe' in elm.ports[name];
-                    })
-                    .forEach(function (portName) {
-                        var port = elm.ports[portName];
-                        var subscribe = port.subscribe;
-                        var unsubscribe = port.unsubscribe;
-                        elm.ports[portName] = Object.assign(port, {
-                            subscribe: function (handler) {
-                                log('[elm-hot] ports.' + portName + '.subscribe called.');
-                                if (!portSubscribes[portName]) {
-                                    portSubscribes[portName] = [handler];
-                                } else {
-                                    //TODO handle subscribing to single handler more than once?
-                                    portSubscribes[portName].push(handler);
-                                }
-                                return subscribe.call(port, handler);
-                            },
-                            unsubscribe: function (handler) {
-                                log('[elm-hot] ports.' + portName + '.unsubscribe called.');
-                                var list = portSubscribes[portName];
-                                if (list && list.indexOf(handler) !== -1) {
-                                    list.splice(list.lastIndexOf(handler), 1);
-                                } else {
-                                    console.warn('[elm-hot] ports.' + portName + '.unsubscribe: handler not subscribed');
-                                }
-                                return unsubscribe.call(port, handler);
-                            }
-                        });
-                    });
-
-                // hook incoming ports
-                portNames
-                    .filter(function (name) {
-                        return 'send' in elm.ports[name];
-                    })
-                    .forEach(function (portName) {
-                        var port = elm.ports[portName];
-                        portSends[portName] = port.send;
-                        elm.ports[portName] = Object.assign(port, {
-                            send: function (val) {
-                                return portSends[portName].call(port, val);
-                            }
-                        });
-                    });
-            }
-            return portSubscribes;
-        }
-
-        /*
-        Breadth-first search for a `Browser.Navigation.Key` in the user's app model.
-        Returns the key and keypath or null if not found.
-        */
-        function findNavKey(rootModel) {
-            var queue = [];
-            if (isDebuggerModel(rootModel)) {
-                /*
-                 Extract the user's app model from the Elm Debugger's model. The Elm debugger
-                 can hold multiple references to the user's model (e.g. in its "history"). So
-                 we must be careful to only search within the "state" part of the Debugger.
-                */
-                queue.push({value: rootModel['state'], keypath: ['state']});
-            } else {
-                queue.push({value: rootModel, keypath: []});
-            }
-
-            while (queue.length !== 0) {
-                var item = queue.shift();
-
-                if (typeof item.value === "undefined" || item.value === null) {
-                    continue;
-                }
-
-                // The nav key is identified by a runtime tag added by the elm-hot injector.
-                if (item.value.hasOwnProperty("elm-hot-nav-key")) {
-                    // found it!
-                    return item;
-                }
-
-                if (typeof item.value !== "object") {
-                    continue;
-                }
-
-                for (var propName in item.value) {
-                    if (!item.value.hasOwnProperty(propName)) continue;
-                    var newKeypath = item.keypath.slice();
-                    newKeypath.push(propName);
-                    queue.push({value: item.value[propName], keypath: newKeypath})
-                }
-            }
-
-            return null;
-        }
-
-
-        function isDebuggerModel(model) {
-            // Up until elm/browser 1.0.2, the Elm debugger could be identified by a
-            // property named "expando". But in version 1.0.2 that was renamed to "expandoModel"
-            return model
-                && (model.hasOwnProperty("expando") || model.hasOwnProperty("expandoModel"))
-                && model.hasOwnProperty("state");
-        }
-
-        function getAt(keyPath, obj) {
-            return keyPath.reduce(function (xs, x) {
-                return (xs && xs[x]) ? xs[x] : null
-            }, obj)
-        }
-
-        function removeNavKeyListeners(navKey) {
-            window.removeEventListener('popstate', navKey.value);
-            window.navigator.userAgent.indexOf('Trident') < 0 || window.removeEventListener('hashchange', navKey.value);
-        }
-
-        // hook program creation
-        var initialize = _Platform_initialize;
-        _Platform_initialize = function (flagDecoder, args, init, update, subscriptions, stepperBuilder) {
-            var instance = initializingInstance || swappingInstance;
-            var tryFirstRender = !!swappingInstance;
-
-            var hookedInit = function (args) {
-                var initialStateTuple = init(args);
-                if (swappingInstance) {
-                    var oldModel = swappingInstance.lastState;
-                    var newModel = initialStateTuple.a;
-
-                    if (typeof elmSymbol("elm$browser$Browser$application") !== 'undefined') {
-                        var oldKeyLoc = findNavKey(oldModel);
-
-                        // attempt to find the Browser.Navigation.Key in the newly-constructed model
-                        // and bring it along with the rest of the old data.
-                        var newKeyLoc = findNavKey(newModel);
-                        var error = null;
-                        if (newKeyLoc === null) {
-                            error = "could not find Browser.Navigation.Key in the new app model";
-                        } else if (oldKeyLoc === null) {
-                            error = "could not find Browser.Navigation.Key in the old app model.";
-                        } else if (newKeyLoc.keypath.toString() !== oldKeyLoc.keypath.toString()) {
-                            error = "the location of the Browser.Navigation.Key in the model has changed.";
-                        } else {
-                            // remove event listeners attached to the old nav key
-                            removeNavKeyListeners(oldKeyLoc.value);
-
-                            // insert the new nav key into the old model in the exact same location
-                            var parentKeyPath = oldKeyLoc.keypath.slice(0, -1);
-                            var lastSegment = oldKeyLoc.keypath.slice(-1)[0];
-                            var oldParent = getAt(parentKeyPath, oldModel);
-                            oldParent[lastSegment] = newKeyLoc.value;
-                        }
-
-                        if (error !== null) {
-                            console.error("[elm-hot] Hot-swapping " + instance.path + " not possible: " + error);
-                            oldModel = newModel;
-                        }
-                    }
-
-                    // the heart of the app state hot-swap
-                    initialStateTuple.a = oldModel;
-
-                    // ignore any Cmds returned by the init during hot-swap
-                    initialStateTuple.b = elmSymbol("elm$core$Platform$Cmd$none");
-                } else {
-                    // capture the initial state for later
-                    initializingInstance.lastState = initialStateTuple.a;
-                }
-
-                return initialStateTuple
-            };
-
-            var hookedStepperBuilder = function (sendToApp, model) {
-                var result;
-                // first render may fail if shape of model changed too much
-                if (tryFirstRender) {
-                    tryFirstRender = false;
-                    try {
-                        result = stepperBuilder(sendToApp, model)
-                    } catch (e) {
-                        throw new Error('[elm-hot] Hot-swapping ' + instance.path +
-                            ' is not possible, please reload page. Error: ' + e.message)
-                    }
-                } else {
-                    result = stepperBuilder(sendToApp, model)
-                }
-
-                return function (nextModel, isSync) {
-                    if (instance) {
-                        // capture the state after every step so that later we can restore from it during a hot-swap
-                        instance.lastState = nextModel
-                    }
-                    return result(nextModel, isSync)
-                }
-            };
-
-            return initialize(flagDecoder, args, hookedInit, update, subscriptions, hookedStepperBuilder)
-        };
-
-        // hook process creation
-        var originalBinding = _Scheduler_binding;
-        _Scheduler_binding = function (originalCallback) {
-            return originalBinding(function () {
-                // start the scheduled process, which may return a cancellation function.
-                var cancel = originalCallback.apply(this, arguments);
-                if (cancel) {
-                    cancellers.push(cancel);
-                    return function () {
-                        cancellers.splice(cancellers.indexOf(cancel), 1);
-                        return cancel();
-                    };
-                }
-                return cancel;
-            });
-        };
-
-        scope['_elm_hot_loader_init'] = function (Elm) {
-            // swap instances
-            var removedInstances = [];
-            for (var id in instances) {
-                var instance = instances[id];
-                if (instance.domNode.parentNode) {
-                    swap(Elm, instance);
-                } else {
-                    removedInstances.push(id);
-                }
-            }
-
-            removedInstances.forEach(function (id) {
-                delete instance[id];
-            });
-
-            // wrap all public modules
-            var publicModules = findPublicModules(Elm);
-            publicModules.forEach(function (m) {
-                wrapPublicModule(m.path, m.module);
-            });
-        }
-    })();
-
-    scope['_elm_hot_loader_init'](scope['Elm']);
-}
-//////////////////// HMR END ////////////////////
-
-
-
-
-//////////////////// HMR BEGIN ////////////////////
-
-/*
-  MIT License http://www.opensource.org/licenses/mit-license.php
-  Original Author: Flux Xu @fluxxu
-*/
-
-/*
-    A note about the environment that this code runs in...
-
-    assumed globals:
-        - `module` (from Node.js module system and webpack)
-
-    assumed in scope after injection into the Elm IIFE:
-        - `scope` (has an 'Elm' property which contains the public Elm API)
-        - various functions defined by Elm which we have to hook such as `_Platform_initialize` and `_Scheduler_binding`
- */
-
-if (module.hot) {
-    (function () {
-        "use strict";
-
-        //polyfill for IE: https://github.com/fluxxu/elm-hot-loader/issues/16
-        if (typeof Object.assign != 'function') {
-            Object.assign = function (target) {
-                'use strict';
-                if (target == null) {
-                    throw new TypeError('Cannot convert undefined or null to object');
-                }
-
-                target = Object(target);
-                for (var index = 1; index < arguments.length; index++) {
-                    var source = arguments[index];
-                    if (source != null) {
-                        for (var key in source) {
-                            if (Object.prototype.hasOwnProperty.call(source, key)) {
-                                target[key] = source[key];
-                            }
-                        }
-                    }
-                }
-                return target;
-            };
-        }
-
-        // Elm 0.19.1 introduced a '$' prefix at the beginning of the symbols it emits,
-        // and we check for `Maybe.Just` because we expect it to be present in all Elm programs.
-        var elmVersion;
-        if (typeof elm$core$Maybe$Just !== 'undefined')
-            elmVersion = '0.19.0';
-        else if (typeof $elm$core$Maybe$Just !== 'undefined')
-            elmVersion = '0.19.1';
-        else
-            throw new Error("Could not determine Elm version");
-
-        function elmSymbol(symbol) {
-            try {
-                switch (elmVersion) {
-                    case '0.19.0':
-                        return eval(symbol);
-                    case '0.19.1':
-                        return eval('$' + symbol);
-                    default:
-                        throw new Error('Cannot resolve ' + symbol + '. Elm version unknown!')
-                }
-            } catch (e) {
-                if (e instanceof ReferenceError) {
-                    return undefined;
-                } else {
-                    throw e;
-                }
-            }
-        }
-
-        var instances = module.hot.data
-            ? module.hot.data.instances || {}
-            : {};
-        var uid = module.hot.data
-            ? module.hot.data.uid || 0
-            : 0;
-
-        if (Object.keys(instances).length === 0) {
-            log("[elm-hot] Enabled");
-        }
-
-        var cancellers = [];
-
-        // These 2 variables act as dynamically-scoped variables which are set only when the
-        // Elm module's hooked init function is called.
-        var initializingInstance = null;
-        var swappingInstance = null;
-
-        module.hot.accept();
-        module.hot.dispose(function (data) {
-            data.instances = instances;
-            data.uid = uid;
-
-            // Cleanup pending async tasks
-
-            // First, make sure that no new tasks can be started until we finish replacing the code
-            _Scheduler_binding = function () {
-                return _Scheduler_fail(new Error('[elm-hot] Inactive Elm instance.'))
-            };
-
-            // Second, kill pending tasks belonging to the old instance
-            if (cancellers.length) {
-                log('[elm-hot] Killing ' + cancellers.length + ' running processes...');
-                try {
-                    cancellers.forEach(function (cancel) {
-                        cancel();
-                    });
-                } catch (e) {
-                    console.warn('[elm-hot] Kill process error: ' + e.message);
-                }
-            }
-        });
-
-        function log(message) {
-            if (module.hot.verbose) {
-                console.log(message)
-            }
-        }
-
-        function getId() {
-            return ++uid;
-        }
-
-        function findPublicModules(parent, path) {
-            var modules = [];
-            for (var key in parent) {
-                var child = parent[key];
-                var currentPath = path ? path + '.' + key : key;
-                if ('init' in child) {
-                    modules.push({
-                        path: currentPath,
-                        module: child
-                    });
-                } else {
-                    modules = modules.concat(findPublicModules(child, currentPath));
-                }
-            }
-            return modules;
-        }
-
-        function registerInstance(domNode, flags, path, portSubscribes, portSends) {
-            var id = getId();
-
-            var instance = {
-                id: id,
-                path: path,
-                domNode: domNode,
-                flags: flags,
-                portSubscribes: portSubscribes,
-                portSends: portSends,
-                lastState: null // last Elm app state (root model)
-            };
-
-            return instances[id] = instance
-        }
-
-        function isFullscreenApp() {
-            // Returns true if the Elm app will take over the entire DOM body.
-            return typeof elmSymbol("elm$browser$Browser$application") !== 'undefined'
-                || typeof elmSymbol("elm$browser$Browser$document") !== 'undefined';
-        }
-
-        function wrapDomNode(node) {
-            // When embedding an Elm app into a specific DOM node, Elm will replace the provided
-            // DOM node with the Elm app's content. When the Elm app is compiled normally, the
-            // original DOM node is reused (its attributes and content changes, but the object
-            // in memory remains the same). But when compiled using `--debug`, Elm will completely
-            // destroy the original DOM node and instead replace it with 2 brand new nodes: one
-            // for your Elm app's content and the other for the Elm debugger UI. In this case,
-            // if you held a reference to the DOM node provided for embedding, it would be orphaned
-            // after Elm module initialization.
-            //
-            // So in order to make both cases consistent and isolate us from changes in how Elm
-            // does this, we will insert a dummy node to wrap the node for embedding and hold
-            // a reference to the dummy node.
-            //
-            // We will also put a tag on the dummy node so that the Elm developer knows who went
-            // behind their back and rudely put stuff in their DOM.
-            var dummyNode = document.createElement("div");
-            dummyNode.setAttribute("data-elm-hot", "true");
-            dummyNode.style.height = "inherit";
-            var parentNode = node.parentNode;
-            parentNode.replaceChild(dummyNode, node);
-            dummyNode.appendChild(node);
-            return dummyNode;
-        }
-
-        function wrapPublicModule(path, module) {
-            var originalInit = module.init;
-            if (originalInit) {
-                module.init = function (args) {
-                    var elm;
-                    var portSubscribes = {};
-                    var portSends = {};
-                    var domNode = null;
-                    var flags = null;
-                    if (typeof args !== 'undefined') {
-                        // normal case
-                        domNode = args['node'] && !isFullscreenApp()
-                            ? wrapDomNode(args['node'])
-                            : document.body;
-                        flags = args['flags'];
-                    } else {
-                        // rare case: Elm allows init to be called without any arguments at all
-                        domNode = document.body;
-                        flags = undefined
-                    }
-                    initializingInstance = registerInstance(domNode, flags, path, portSubscribes, portSends);
-                    elm = originalInit(args);
-                    wrapPorts(elm, portSubscribes, portSends);
-                    initializingInstance = null;
-                    return elm;
-                };
-            } else {
-                console.error("Could not find a public module to wrap at path " + path)
-            }
-        }
-
-        function swap(Elm, instance) {
-            log('[elm-hot] Hot-swapping module: ' + instance.path);
-
-            swappingInstance = instance;
-
-            // remove from the DOM everything that had been created by the old Elm app
-            var containerNode = instance.domNode;
-            while (containerNode.lastChild) {
-                containerNode.removeChild(containerNode.lastChild);
-            }
-
-            var m = getAt(instance.path.split('.'), Elm);
-            var elm;
-            if (m) {
-                // prepare to initialize the new Elm module
-                var args = {flags: instance.flags};
-                if (containerNode === document.body) {
-                    // fullscreen case: no additional args needed
-                } else {
-                    // embed case: provide a new node for Elm to use
-                    var nodeForEmbed = document.createElement("div");
-                    containerNode.appendChild(nodeForEmbed);
-                    args['node'] = nodeForEmbed;
-                }
-
-                elm = m.init(args);
-
-                Object.keys(instance.portSubscribes).forEach(function (portName) {
-                    if (portName in elm.ports && 'subscribe' in elm.ports[portName]) {
-                        var handlers = instance.portSubscribes[portName];
-                        if (!handlers.length) {
-                            return;
-                        }
-                        log('[elm-hot] Reconnect ' + handlers.length + ' handler(s) to port \''
-                            + portName + '\' (' + instance.path + ').');
-                        handlers.forEach(function (handler) {
-                            elm.ports[portName].subscribe(handler);
-                        });
-                    } else {
-                        delete instance.portSubscribes[portName];
-                        log('[elm-hot] Port was removed: ' + portName);
-                    }
-                });
-
-                Object.keys(instance.portSends).forEach(function (portName) {
-                    if (portName in elm.ports && 'send' in elm.ports[portName]) {
-                        log('[elm-hot] Replace old port send with the new send');
-                        instance.portSends[portName] = elm.ports[portName].send;
-                    } else {
-                        delete instance.portSends[portName];
-                        log('[elm-hot] Port was removed: ' + portName);
-                    }
-                });
-            } else {
-                log('[elm-hot] Module was removed: ' + instance.path);
-            }
-
-            swappingInstance = null;
-        }
-
-        function wrapPorts(elm, portSubscribes, portSends) {
-            var portNames = Object.keys(elm.ports || {});
-            //hook ports
-            if (portNames.length) {
-                // hook outgoing ports
-                portNames
-                    .filter(function (name) {
-                        return 'subscribe' in elm.ports[name];
-                    })
-                    .forEach(function (portName) {
-                        var port = elm.ports[portName];
-                        var subscribe = port.subscribe;
-                        var unsubscribe = port.unsubscribe;
-                        elm.ports[portName] = Object.assign(port, {
-                            subscribe: function (handler) {
-                                log('[elm-hot] ports.' + portName + '.subscribe called.');
-                                if (!portSubscribes[portName]) {
-                                    portSubscribes[portName] = [handler];
-                                } else {
-                                    //TODO handle subscribing to single handler more than once?
-                                    portSubscribes[portName].push(handler);
-                                }
-                                return subscribe.call(port, handler);
-                            },
-                            unsubscribe: function (handler) {
-                                log('[elm-hot] ports.' + portName + '.unsubscribe called.');
-                                var list = portSubscribes[portName];
-                                if (list && list.indexOf(handler) !== -1) {
-                                    list.splice(list.lastIndexOf(handler), 1);
-                                } else {
-                                    console.warn('[elm-hot] ports.' + portName + '.unsubscribe: handler not subscribed');
-                                }
-                                return unsubscribe.call(port, handler);
-                            }
-                        });
-                    });
-
-                // hook incoming ports
-                portNames
-                    .filter(function (name) {
-                        return 'send' in elm.ports[name];
-                    })
-                    .forEach(function (portName) {
-                        var port = elm.ports[portName];
-                        portSends[portName] = port.send;
-                        elm.ports[portName] = Object.assign(port, {
-                            send: function (val) {
-                                return portSends[portName].call(port, val);
-                            }
-                        });
-                    });
-            }
-            return portSubscribes;
-        }
-
-        /*
-        Breadth-first search for a `Browser.Navigation.Key` in the user's app model.
-        Returns the key and keypath or null if not found.
-        */
-        function findNavKey(rootModel) {
-            var queue = [];
-            if (isDebuggerModel(rootModel)) {
-                /*
-                 Extract the user's app model from the Elm Debugger's model. The Elm debugger
-                 can hold multiple references to the user's model (e.g. in its "history"). So
-                 we must be careful to only search within the "state" part of the Debugger.
-                */
-                queue.push({value: rootModel['state'], keypath: ['state']});
-            } else {
-                queue.push({value: rootModel, keypath: []});
-            }
-
-            while (queue.length !== 0) {
-                var item = queue.shift();
-
-                if (typeof item.value === "undefined" || item.value === null) {
-                    continue;
-                }
-
-                // The nav key is identified by a runtime tag added by the elm-hot injector.
-                if (item.value.hasOwnProperty("elm-hot-nav-key")) {
-                    // found it!
-                    return item;
-                }
-
-                if (typeof item.value !== "object") {
-                    continue;
-                }
-
-                for (var propName in item.value) {
-                    if (!item.value.hasOwnProperty(propName)) continue;
-                    var newKeypath = item.keypath.slice();
-                    newKeypath.push(propName);
-                    queue.push({value: item.value[propName], keypath: newKeypath})
-                }
-            }
-
-            return null;
-        }
-
-
-        function isDebuggerModel(model) {
-            // Up until elm/browser 1.0.2, the Elm debugger could be identified by a
-            // property named "expando". But in version 1.0.2 that was renamed to "expandoModel"
-            return model
-                && (model.hasOwnProperty("expando") || model.hasOwnProperty("expandoModel"))
-                && model.hasOwnProperty("state");
-        }
-
-        function getAt(keyPath, obj) {
-            return keyPath.reduce(function (xs, x) {
-                return (xs && xs[x]) ? xs[x] : null
-            }, obj)
-        }
-
-        function removeNavKeyListeners(navKey) {
-            window.removeEventListener('popstate', navKey.value);
-            window.navigator.userAgent.indexOf('Trident') < 0 || window.removeEventListener('hashchange', navKey.value);
-        }
-
-        // hook program creation
-        var initialize = _Platform_initialize;
-        _Platform_initialize = function (flagDecoder, args, init, update, subscriptions, stepperBuilder) {
-            var instance = initializingInstance || swappingInstance;
-            var tryFirstRender = !!swappingInstance;
-
-            var hookedInit = function (args) {
-                var initialStateTuple = init(args);
-                if (swappingInstance) {
-                    var oldModel = swappingInstance.lastState;
-                    var newModel = initialStateTuple.a;
-
-                    if (typeof elmSymbol("elm$browser$Browser$application") !== 'undefined') {
-                        var oldKeyLoc = findNavKey(oldModel);
-
-                        // attempt to find the Browser.Navigation.Key in the newly-constructed model
-                        // and bring it along with the rest of the old data.
-                        var newKeyLoc = findNavKey(newModel);
-                        var error = null;
-                        if (newKeyLoc === null) {
-                            error = "could not find Browser.Navigation.Key in the new app model";
-                        } else if (oldKeyLoc === null) {
-                            error = "could not find Browser.Navigation.Key in the old app model.";
-                        } else if (newKeyLoc.keypath.toString() !== oldKeyLoc.keypath.toString()) {
-                            error = "the location of the Browser.Navigation.Key in the model has changed.";
-                        } else {
-                            // remove event listeners attached to the old nav key
-                            removeNavKeyListeners(oldKeyLoc.value);
-
-                            // insert the new nav key into the old model in the exact same location
-                            var parentKeyPath = oldKeyLoc.keypath.slice(0, -1);
-                            var lastSegment = oldKeyLoc.keypath.slice(-1)[0];
-                            var oldParent = getAt(parentKeyPath, oldModel);
-                            oldParent[lastSegment] = newKeyLoc.value;
-                        }
-
-                        if (error !== null) {
-                            console.error("[elm-hot] Hot-swapping " + instance.path + " not possible: " + error);
-                            oldModel = newModel;
-                        }
-                    }
-
-                    // the heart of the app state hot-swap
-                    initialStateTuple.a = oldModel;
-
-                    // ignore any Cmds returned by the init during hot-swap
-                    initialStateTuple.b = elmSymbol("elm$core$Platform$Cmd$none");
-                } else {
-                    // capture the initial state for later
-                    initializingInstance.lastState = initialStateTuple.a;
-                }
-
-                return initialStateTuple
-            };
-
-            var hookedStepperBuilder = function (sendToApp, model) {
-                var result;
-                // first render may fail if shape of model changed too much
-                if (tryFirstRender) {
-                    tryFirstRender = false;
-                    try {
-                        result = stepperBuilder(sendToApp, model)
-                    } catch (e) {
-                        throw new Error('[elm-hot] Hot-swapping ' + instance.path +
-                            ' is not possible, please reload page. Error: ' + e.message)
-                    }
-                } else {
-                    result = stepperBuilder(sendToApp, model)
-                }
-
-                return function (nextModel, isSync) {
-                    if (instance) {
-                        // capture the state after every step so that later we can restore from it during a hot-swap
-                        instance.lastState = nextModel
-                    }
-                    return result(nextModel, isSync)
-                }
-            };
-
-            return initialize(flagDecoder, args, hookedInit, update, subscriptions, hookedStepperBuilder)
-        };
-
-        // hook process creation
-        var originalBinding = _Scheduler_binding;
-        _Scheduler_binding = function (originalCallback) {
-            return originalBinding(function () {
-                // start the scheduled process, which may return a cancellation function.
-                var cancel = originalCallback.apply(this, arguments);
-                if (cancel) {
-                    cancellers.push(cancel);
-                    return function () {
-                        cancellers.splice(cancellers.indexOf(cancel), 1);
-                        return cancel();
-                    };
-                }
-                return cancel;
-            });
-        };
-
-        scope['_elm_hot_loader_init'] = function (Elm) {
-            // swap instances
-            var removedInstances = [];
-            for (var id in instances) {
-                var instance = instances[id];
-                if (instance.domNode.parentNode) {
-                    swap(Elm, instance);
-                } else {
-                    removedInstances.push(id);
-                }
-            }
-
-            removedInstances.forEach(function (id) {
-                delete instance[id];
-            });
-
-            // wrap all public modules
-            var publicModules = findPublicModules(Elm);
-            publicModules.forEach(function (m) {
-                wrapPublicModule(m.path, m.module);
-            });
-        }
-    })();
-
-    scope['_elm_hot_loader_init'](scope['Elm']);
-}
-//////////////////// HMR END ////////////////////
-
-
-
-
-//////////////////// HMR BEGIN ////////////////////
-
-/*
-  MIT License http://www.opensource.org/licenses/mit-license.php
-  Original Author: Flux Xu @fluxxu
-*/
-
-/*
-    A note about the environment that this code runs in...
-
-    assumed globals:
-        - `module` (from Node.js module system and webpack)
-
-    assumed in scope after injection into the Elm IIFE:
-        - `scope` (has an 'Elm' property which contains the public Elm API)
-        - various functions defined by Elm which we have to hook such as `_Platform_initialize` and `_Scheduler_binding`
- */
-
-if (module.hot) {
-    (function () {
-        "use strict";
-
-        //polyfill for IE: https://github.com/fluxxu/elm-hot-loader/issues/16
-        if (typeof Object.assign != 'function') {
-            Object.assign = function (target) {
-                'use strict';
-                if (target == null) {
-                    throw new TypeError('Cannot convert undefined or null to object');
-                }
-
-                target = Object(target);
-                for (var index = 1; index < arguments.length; index++) {
-                    var source = arguments[index];
-                    if (source != null) {
-                        for (var key in source) {
-                            if (Object.prototype.hasOwnProperty.call(source, key)) {
-                                target[key] = source[key];
-                            }
-                        }
-                    }
-                }
-                return target;
-            };
-        }
-
-        // Elm 0.19.1 introduced a '$' prefix at the beginning of the symbols it emits,
-        // and we check for `Maybe.Just` because we expect it to be present in all Elm programs.
-        var elmVersion;
-        if (typeof elm$core$Maybe$Just !== 'undefined')
-            elmVersion = '0.19.0';
-        else if (typeof $elm$core$Maybe$Just !== 'undefined')
-            elmVersion = '0.19.1';
-        else
-            throw new Error("Could not determine Elm version");
-
-        function elmSymbol(symbol) {
-            try {
-                switch (elmVersion) {
-                    case '0.19.0':
-                        return eval(symbol);
-                    case '0.19.1':
-                        return eval('$' + symbol);
-                    default:
-                        throw new Error('Cannot resolve ' + symbol + '. Elm version unknown!')
-                }
-            } catch (e) {
-                if (e instanceof ReferenceError) {
-                    return undefined;
-                } else {
-                    throw e;
-                }
-            }
-        }
-
-        var instances = module.hot.data
-            ? module.hot.data.instances || {}
-            : {};
-        var uid = module.hot.data
-            ? module.hot.data.uid || 0
-            : 0;
-
-        if (Object.keys(instances).length === 0) {
-            log("[elm-hot] Enabled");
-        }
-
-        var cancellers = [];
-
-        // These 2 variables act as dynamically-scoped variables which are set only when the
-        // Elm module's hooked init function is called.
-        var initializingInstance = null;
-        var swappingInstance = null;
-
-        module.hot.accept();
-        module.hot.dispose(function (data) {
-            data.instances = instances;
-            data.uid = uid;
-
-            // Cleanup pending async tasks
-
-            // First, make sure that no new tasks can be started until we finish replacing the code
-            _Scheduler_binding = function () {
-                return _Scheduler_fail(new Error('[elm-hot] Inactive Elm instance.'))
-            };
-
-            // Second, kill pending tasks belonging to the old instance
-            if (cancellers.length) {
-                log('[elm-hot] Killing ' + cancellers.length + ' running processes...');
-                try {
-                    cancellers.forEach(function (cancel) {
-                        cancel();
-                    });
-                } catch (e) {
-                    console.warn('[elm-hot] Kill process error: ' + e.message);
-                }
-            }
-        });
-
-        function log(message) {
-            if (module.hot.verbose) {
-                console.log(message)
-            }
-        }
-
-        function getId() {
-            return ++uid;
-        }
-
-        function findPublicModules(parent, path) {
-            var modules = [];
-            for (var key in parent) {
-                var child = parent[key];
-                var currentPath = path ? path + '.' + key : key;
-                if ('init' in child) {
-                    modules.push({
-                        path: currentPath,
-                        module: child
-                    });
-                } else {
-                    modules = modules.concat(findPublicModules(child, currentPath));
-                }
-            }
-            return modules;
-        }
-
-        function registerInstance(domNode, flags, path, portSubscribes, portSends) {
-            var id = getId();
-
-            var instance = {
-                id: id,
-                path: path,
-                domNode: domNode,
-                flags: flags,
-                portSubscribes: portSubscribes,
-                portSends: portSends,
-                lastState: null // last Elm app state (root model)
-            };
-
-            return instances[id] = instance
-        }
-
-        function isFullscreenApp() {
-            // Returns true if the Elm app will take over the entire DOM body.
-            return typeof elmSymbol("elm$browser$Browser$application") !== 'undefined'
-                || typeof elmSymbol("elm$browser$Browser$document") !== 'undefined';
-        }
-
-        function wrapDomNode(node) {
-            // When embedding an Elm app into a specific DOM node, Elm will replace the provided
-            // DOM node with the Elm app's content. When the Elm app is compiled normally, the
-            // original DOM node is reused (its attributes and content changes, but the object
-            // in memory remains the same). But when compiled using `--debug`, Elm will completely
-            // destroy the original DOM node and instead replace it with 2 brand new nodes: one
-            // for your Elm app's content and the other for the Elm debugger UI. In this case,
-            // if you held a reference to the DOM node provided for embedding, it would be orphaned
-            // after Elm module initialization.
-            //
-            // So in order to make both cases consistent and isolate us from changes in how Elm
-            // does this, we will insert a dummy node to wrap the node for embedding and hold
-            // a reference to the dummy node.
-            //
-            // We will also put a tag on the dummy node so that the Elm developer knows who went
-            // behind their back and rudely put stuff in their DOM.
-            var dummyNode = document.createElement("div");
-            dummyNode.setAttribute("data-elm-hot", "true");
-            dummyNode.style.height = "inherit";
-            var parentNode = node.parentNode;
-            parentNode.replaceChild(dummyNode, node);
-            dummyNode.appendChild(node);
-            return dummyNode;
-        }
-
-        function wrapPublicModule(path, module) {
-            var originalInit = module.init;
-            if (originalInit) {
-                module.init = function (args) {
-                    var elm;
-                    var portSubscribes = {};
-                    var portSends = {};
-                    var domNode = null;
-                    var flags = null;
-                    if (typeof args !== 'undefined') {
-                        // normal case
-                        domNode = args['node'] && !isFullscreenApp()
-                            ? wrapDomNode(args['node'])
-                            : document.body;
-                        flags = args['flags'];
-                    } else {
-                        // rare case: Elm allows init to be called without any arguments at all
-                        domNode = document.body;
-                        flags = undefined
-                    }
-                    initializingInstance = registerInstance(domNode, flags, path, portSubscribes, portSends);
-                    elm = originalInit(args);
-                    wrapPorts(elm, portSubscribes, portSends);
-                    initializingInstance = null;
-                    return elm;
-                };
-            } else {
-                console.error("Could not find a public module to wrap at path " + path)
-            }
-        }
-
-        function swap(Elm, instance) {
-            log('[elm-hot] Hot-swapping module: ' + instance.path);
-
-            swappingInstance = instance;
-
-            // remove from the DOM everything that had been created by the old Elm app
-            var containerNode = instance.domNode;
-            while (containerNode.lastChild) {
-                containerNode.removeChild(containerNode.lastChild);
-            }
-
-            var m = getAt(instance.path.split('.'), Elm);
-            var elm;
-            if (m) {
-                // prepare to initialize the new Elm module
-                var args = {flags: instance.flags};
-                if (containerNode === document.body) {
-                    // fullscreen case: no additional args needed
-                } else {
-                    // embed case: provide a new node for Elm to use
-                    var nodeForEmbed = document.createElement("div");
-                    containerNode.appendChild(nodeForEmbed);
-                    args['node'] = nodeForEmbed;
-                }
-
-                elm = m.init(args);
-
-                Object.keys(instance.portSubscribes).forEach(function (portName) {
-                    if (portName in elm.ports && 'subscribe' in elm.ports[portName]) {
-                        var handlers = instance.portSubscribes[portName];
-                        if (!handlers.length) {
-                            return;
-                        }
-                        log('[elm-hot] Reconnect ' + handlers.length + ' handler(s) to port \''
-                            + portName + '\' (' + instance.path + ').');
-                        handlers.forEach(function (handler) {
-                            elm.ports[portName].subscribe(handler);
-                        });
-                    } else {
-                        delete instance.portSubscribes[portName];
-                        log('[elm-hot] Port was removed: ' + portName);
-                    }
-                });
-
-                Object.keys(instance.portSends).forEach(function (portName) {
-                    if (portName in elm.ports && 'send' in elm.ports[portName]) {
-                        log('[elm-hot] Replace old port send with the new send');
-                        instance.portSends[portName] = elm.ports[portName].send;
-                    } else {
-                        delete instance.portSends[portName];
-                        log('[elm-hot] Port was removed: ' + portName);
-                    }
-                });
-            } else {
-                log('[elm-hot] Module was removed: ' + instance.path);
-            }
-
-            swappingInstance = null;
-        }
-
-        function wrapPorts(elm, portSubscribes, portSends) {
-            var portNames = Object.keys(elm.ports || {});
-            //hook ports
-            if (portNames.length) {
-                // hook outgoing ports
-                portNames
-                    .filter(function (name) {
-                        return 'subscribe' in elm.ports[name];
-                    })
-                    .forEach(function (portName) {
-                        var port = elm.ports[portName];
-                        var subscribe = port.subscribe;
-                        var unsubscribe = port.unsubscribe;
-                        elm.ports[portName] = Object.assign(port, {
-                            subscribe: function (handler) {
-                                log('[elm-hot] ports.' + portName + '.subscribe called.');
-                                if (!portSubscribes[portName]) {
-                                    portSubscribes[portName] = [handler];
-                                } else {
-                                    //TODO handle subscribing to single handler more than once?
-                                    portSubscribes[portName].push(handler);
-                                }
-                                return subscribe.call(port, handler);
-                            },
-                            unsubscribe: function (handler) {
-                                log('[elm-hot] ports.' + portName + '.unsubscribe called.');
-                                var list = portSubscribes[portName];
-                                if (list && list.indexOf(handler) !== -1) {
-                                    list.splice(list.lastIndexOf(handler), 1);
-                                } else {
-                                    console.warn('[elm-hot] ports.' + portName + '.unsubscribe: handler not subscribed');
-                                }
-                                return unsubscribe.call(port, handler);
-                            }
-                        });
-                    });
-
-                // hook incoming ports
-                portNames
-                    .filter(function (name) {
-                        return 'send' in elm.ports[name];
-                    })
-                    .forEach(function (portName) {
-                        var port = elm.ports[portName];
-                        portSends[portName] = port.send;
-                        elm.ports[portName] = Object.assign(port, {
-                            send: function (val) {
-                                return portSends[portName].call(port, val);
-                            }
-                        });
-                    });
-            }
-            return portSubscribes;
-        }
-
-        /*
-        Breadth-first search for a `Browser.Navigation.Key` in the user's app model.
-        Returns the key and keypath or null if not found.
-        */
-        function findNavKey(rootModel) {
-            var queue = [];
-            if (isDebuggerModel(rootModel)) {
-                /*
-                 Extract the user's app model from the Elm Debugger's model. The Elm debugger
-                 can hold multiple references to the user's model (e.g. in its "history"). So
-                 we must be careful to only search within the "state" part of the Debugger.
-                */
-                queue.push({value: rootModel['state'], keypath: ['state']});
-            } else {
-                queue.push({value: rootModel, keypath: []});
-            }
-
-            while (queue.length !== 0) {
-                var item = queue.shift();
-
-                if (typeof item.value === "undefined" || item.value === null) {
-                    continue;
-                }
-
-                // The nav key is identified by a runtime tag added by the elm-hot injector.
-                if (item.value.hasOwnProperty("elm-hot-nav-key")) {
-                    // found it!
-                    return item;
-                }
-
-                if (typeof item.value !== "object") {
-                    continue;
-                }
-
-                for (var propName in item.value) {
-                    if (!item.value.hasOwnProperty(propName)) continue;
-                    var newKeypath = item.keypath.slice();
-                    newKeypath.push(propName);
-                    queue.push({value: item.value[propName], keypath: newKeypath})
-                }
-            }
-
-            return null;
-        }
-
-
-        function isDebuggerModel(model) {
-            // Up until elm/browser 1.0.2, the Elm debugger could be identified by a
-            // property named "expando". But in version 1.0.2 that was renamed to "expandoModel"
-            return model
-                && (model.hasOwnProperty("expando") || model.hasOwnProperty("expandoModel"))
-                && model.hasOwnProperty("state");
-        }
-
-        function getAt(keyPath, obj) {
-            return keyPath.reduce(function (xs, x) {
-                return (xs && xs[x]) ? xs[x] : null
-            }, obj)
-        }
-
-        function removeNavKeyListeners(navKey) {
-            window.removeEventListener('popstate', navKey.value);
-            window.navigator.userAgent.indexOf('Trident') < 0 || window.removeEventListener('hashchange', navKey.value);
-        }
-
-        // hook program creation
-        var initialize = _Platform_initialize;
-        _Platform_initialize = function (flagDecoder, args, init, update, subscriptions, stepperBuilder) {
-            var instance = initializingInstance || swappingInstance;
-            var tryFirstRender = !!swappingInstance;
-
-            var hookedInit = function (args) {
-                var initialStateTuple = init(args);
-                if (swappingInstance) {
-                    var oldModel = swappingInstance.lastState;
-                    var newModel = initialStateTuple.a;
-
-                    if (typeof elmSymbol("elm$browser$Browser$application") !== 'undefined') {
-                        var oldKeyLoc = findNavKey(oldModel);
-
-                        // attempt to find the Browser.Navigation.Key in the newly-constructed model
-                        // and bring it along with the rest of the old data.
-                        var newKeyLoc = findNavKey(newModel);
-                        var error = null;
-                        if (newKeyLoc === null) {
-                            error = "could not find Browser.Navigation.Key in the new app model";
-                        } else if (oldKeyLoc === null) {
-                            error = "could not find Browser.Navigation.Key in the old app model.";
-                        } else if (newKeyLoc.keypath.toString() !== oldKeyLoc.keypath.toString()) {
-                            error = "the location of the Browser.Navigation.Key in the model has changed.";
-                        } else {
-                            // remove event listeners attached to the old nav key
-                            removeNavKeyListeners(oldKeyLoc.value);
-
-                            // insert the new nav key into the old model in the exact same location
-                            var parentKeyPath = oldKeyLoc.keypath.slice(0, -1);
-                            var lastSegment = oldKeyLoc.keypath.slice(-1)[0];
-                            var oldParent = getAt(parentKeyPath, oldModel);
-                            oldParent[lastSegment] = newKeyLoc.value;
-                        }
-
-                        if (error !== null) {
-                            console.error("[elm-hot] Hot-swapping " + instance.path + " not possible: " + error);
-                            oldModel = newModel;
-                        }
-                    }
-
-                    // the heart of the app state hot-swap
-                    initialStateTuple.a = oldModel;
-
-                    // ignore any Cmds returned by the init during hot-swap
-                    initialStateTuple.b = elmSymbol("elm$core$Platform$Cmd$none");
-                } else {
-                    // capture the initial state for later
-                    initializingInstance.lastState = initialStateTuple.a;
-                }
-
-                return initialStateTuple
-            };
-
-            var hookedStepperBuilder = function (sendToApp, model) {
-                var result;
-                // first render may fail if shape of model changed too much
-                if (tryFirstRender) {
-                    tryFirstRender = false;
-                    try {
-                        result = stepperBuilder(sendToApp, model)
-                    } catch (e) {
-                        throw new Error('[elm-hot] Hot-swapping ' + instance.path +
-                            ' is not possible, please reload page. Error: ' + e.message)
-                    }
-                } else {
-                    result = stepperBuilder(sendToApp, model)
-                }
-
-                return function (nextModel, isSync) {
-                    if (instance) {
-                        // capture the state after every step so that later we can restore from it during a hot-swap
-                        instance.lastState = nextModel
-                    }
-                    return result(nextModel, isSync)
-                }
-            };
-
-            return initialize(flagDecoder, args, hookedInit, update, subscriptions, hookedStepperBuilder)
-        };
-
-        // hook process creation
-        var originalBinding = _Scheduler_binding;
-        _Scheduler_binding = function (originalCallback) {
-            return originalBinding(function () {
-                // start the scheduled process, which may return a cancellation function.
-                var cancel = originalCallback.apply(this, arguments);
-                if (cancel) {
-                    cancellers.push(cancel);
-                    return function () {
-                        cancellers.splice(cancellers.indexOf(cancel), 1);
-                        return cancel();
-                    };
-                }
-                return cancel;
-            });
-        };
-
-        scope['_elm_hot_loader_init'] = function (Elm) {
-            // swap instances
-            var removedInstances = [];
-            for (var id in instances) {
-                var instance = instances[id];
-                if (instance.domNode.parentNode) {
-                    swap(Elm, instance);
-                } else {
-                    removedInstances.push(id);
-                }
-            }
-
-            removedInstances.forEach(function (id) {
-                delete instance[id];
-            });
-
-            // wrap all public modules
-            var publicModules = findPublicModules(Elm);
-            publicModules.forEach(function (m) {
-                wrapPublicModule(m.path, m.module);
-            });
-        }
-    })();
-
-    scope['_elm_hot_loader_init'](scope['Elm']);
-}
-//////////////////// HMR END ////////////////////
-
-
-
+var $author$project$MacCalciCore$main = $elm$browser$Browser$sandbox(
+	{init: $author$project$MacCalciCore$init, update: $author$project$MacCalciCore$update, view: $author$project$MacCalciCore$view});
+_Platform_export({'MacCalciCore':{'init':$author$project$MacCalciCore$main(
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"MacCalciCore.Msg","aliases":{},"unions":{"MacCalciCore.Msg":{"args":[],"tags":{"AddNumbers":[],"UpdateNumber":["Basics.Int"],"AllClearTextField":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});
 
 //////////////////// HMR BEGIN ////////////////////
 
