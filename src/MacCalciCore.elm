@@ -60,17 +60,21 @@ update msg model =
             }
 
         UpdateNumber num ->
+            let
+                insertAtOnes x y =
+                    (x * 10) + y
+            in
             case model.operationType of
                 Nothing ->
                     { model
-                        | displayedNumber = (model.displayedNumber * 10) + num
-                        , firstNumber = (model.displayedNumber * 10) + num
+                        | displayedNumber = insertAtOnes model.displayedNumber num
+                        , firstNumber = insertAtOnes model.displayedNumber num
                     }
 
-                Just x ->
+                Just _ ->
                     { model
-                        | displayedNumber = (model.secondNumber * 10) + num
-                        , secondNumber = (model.secondNumber * 10) + num
+                        | displayedNumber = insertAtOnes model.secondNumber num
+                        , secondNumber = insertAtOnes model.secondNumber num
                     }
 
         AllClearTextField ->

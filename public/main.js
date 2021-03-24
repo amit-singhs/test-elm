@@ -4938,8 +4938,8 @@ function _Browser_load(url)
 		}
 	}));
 }
-var $elm$core$Basics$False = {$: 'False'};
-var $author$project$MacCalciCore$init = {displayedNumber: 0, firstNumber: 0, mathematicalOperationIsOn: false, result: 0, secondNumber: 0};
+var $elm$core$Maybe$Nothing = {$: 'Nothing'};
+var $author$project$MacCalciCore$init = {displayedNumber: 0, firstNumber: 0, operationType: $elm$core$Maybe$Nothing, result: 0, secondNumber: 0};
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
@@ -5041,11 +5041,11 @@ var $elm$core$Result$Ok = function (a) {
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
+var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$Basics$add = _Basics_add;
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
 };
-var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
 var $elm$core$Basics$append = _Utils_append;
@@ -10556,33 +10556,68 @@ var $elm$browser$Browser$sandbox = function (impl) {
 			view: impl.view
 		});
 };
+var $author$project$MacCalciCore$Addition = {$: 'Addition'};
 var $author$project$MacCalciCore$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
 			case 'AddNumbers':
 				return _Utils_update(
 					model,
-					{displayedNumber: 0, mathematicalOperationIsOn: true, result: model.firstNumber + model.secondNumber});
+					{
+						displayedNumber: model.firstNumber,
+						operationType: $elm$core$Maybe$Just($author$project$MacCalciCore$Addition)
+					});
 			case 'UpdateNumber':
 				var num = msg.a;
-				var _v1 = model.mathematicalOperationIsOn;
-				if (!_v1) {
+				var insertAtOnes = F2(
+					function (x, y) {
+						return (x * 10) + y;
+					});
+				var _v1 = model.operationType;
+				if (_v1.$ === 'Nothing') {
 					return _Utils_update(
 						model,
-						{displayedNumber: (model.displayedNumber * 10) + num, firstNumber: (model.displayedNumber * 10) + num});
+						{
+							displayedNumber: A2(insertAtOnes, model.displayedNumber, num),
+							firstNumber: A2(insertAtOnes, model.displayedNumber, num)
+						});
 				} else {
 					return _Utils_update(
 						model,
-						{displayedNumber: (model.displayedNumber * 10) + num, secondNumber: (model.displayedNumber * 10) + num});
+						{
+							displayedNumber: A2(insertAtOnes, model.secondNumber, num),
+							secondNumber: A2(insertAtOnes, model.secondNumber, num)
+						});
 				}
+			case 'AllClearTextField':
+				return $author$project$MacCalciCore$init;
 			default:
+				var calculateResult = function (m) {
+					var _v2 = m.operationType;
+					if (_v2.$ === 'Just') {
+						if (_v2.a.$ === 'Addition') {
+							var _v3 = _v2.a;
+							return m.firstNumber + m.secondNumber;
+						} else {
+							var _v4 = _v2.a;
+							return 1;
+						}
+					} else {
+						return 2;
+					}
+				};
 				return _Utils_update(
 					model,
-					{firstNumber: 0});
+					{
+						displayedNumber: calculateResult(model),
+						firstNumber: calculateResult(model),
+						result: calculateResult(model)
+					});
 		}
 	});
 var $author$project$MacCalciCore$AddNumbers = {$: 'AddNumbers'};
 var $author$project$MacCalciCore$AllClearTextField = {$: 'AllClearTextField'};
+var $author$project$MacCalciCore$EqualsTo = {$: 'EqualsTo'};
 var $author$project$MacCalciCore$UpdateNumber = function (a) {
 	return {$: 'UpdateNumber', a: a};
 };
@@ -10657,6 +10692,13 @@ var $author$project$MacCalciCore$view = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$text('/')
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('%')
 					])),
 				A2(
 				$elm$html$Html$div,
@@ -10775,7 +10817,10 @@ var $author$project$MacCalciCore$view = function (model) {
 							])),
 						A2(
 						$elm$html$Html$button,
-						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$MacCalciCore$EqualsTo)
+							]),
 						_List_fromArray(
 							[
 								$elm$html$Html$text('=')
@@ -10796,7 +10841,7 @@ var $author$project$MacCalciCore$view = function (model) {
 var $author$project$MacCalciCore$main = $elm$browser$Browser$sandbox(
 	{init: $author$project$MacCalciCore$init, update: $author$project$MacCalciCore$update, view: $author$project$MacCalciCore$view});
 _Platform_export({'MacCalciCore':{'init':$author$project$MacCalciCore$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"MacCalciCore.Msg","aliases":{},"unions":{"MacCalciCore.Msg":{"args":[],"tags":{"AddNumbers":[],"UpdateNumber":["Basics.Int"],"AllClearTextField":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"MacCalciCore.Msg","aliases":{},"unions":{"MacCalciCore.Msg":{"args":[],"tags":{"AddNumbers":[],"UpdateNumber":["Basics.Int"],"AllClearTextField":[],"EqualsTo":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});
 
 //////////////////// HMR BEGIN ////////////////////
 
