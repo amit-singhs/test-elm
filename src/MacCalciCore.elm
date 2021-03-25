@@ -24,28 +24,33 @@ type Operation
     | Subtraction
 
 
+type NumberType
+    = Integer Int
+    | Decimal Float
+
+
 type alias Model =
-    { firstNumber : Int
-    , secondNumber : Int
-    , displayedNumber : Int
+    { firstNumber : NumberType
+    , secondNumber : NumberType
+    , displayedNumber : NumberType
     , operationType : Maybe Operation
-    , result : Int
+    , result : NumberType
     }
 
 
 init : Model
 init =
-    { firstNumber = 0
-    , secondNumber = 0
-    , displayedNumber = 0
+    { firstNumber = Integer 0
+    , secondNumber = Integer 0
+    , displayedNumber = Integer 0
     , operationType = Nothing
-    , result = 0
+    , result = Integer 0
     }
 
 
 type Msg
     = AddNumbers
-    | UpdateNumber Int
+    | UpdateNumber Float
     | AllClearTextField
     | EqualsTo
 
@@ -62,7 +67,12 @@ update msg model =
         UpdateNumber num ->
             let
                 insertAtOnes x y =
-                    (x * 10) + y
+                    case y of
+                        Integer _ ->
+                            (x * 10) + y
+
+                        Decimal _ ->
+                            (x * 10.0) + y
             in
             case model.operationType of
                 Nothing ->
@@ -108,7 +118,12 @@ view model =
             , input
                 [ placeholder "Enter number"
                 , value <|
-                    String.fromInt model.displayedNumber
+                    case model.displayedNumber of
+                        Integer _ ->
+                            String.fromInt model.displayedNumber
+
+                        Decimal _ ->
+                            String.fromFloat model.displayedNumber
                 ]
                 []
             ]
