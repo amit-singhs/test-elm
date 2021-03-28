@@ -50,7 +50,7 @@ init =
 
 type Msg
     = AddNumbers
-    | UpdateNumber Float
+    | UpdateNumber NumberType
     | AllClearTextField
     | EqualsTo
 
@@ -68,11 +68,11 @@ update msg model =
             let
                 insertAtOnes x y =
                     case y of
-                        Integer _ ->
-                            (x * 10) + y
+                        Integer u ->
+                            Integer ((x * 10) + u)
 
-                        Decimal _ ->
-                            (x * 10.0) + y
+                        Decimal v ->
+                            Decimal ((toFloat x * 10) + v)
             in
             case model.operationType of
                 Nothing ->
@@ -119,33 +119,33 @@ view model =
                 [ placeholder "Enter number"
                 , value <|
                     case model.displayedNumber of
-                        Integer _ ->
-                            String.fromInt model.displayedNumber
+                        Integer x ->
+                            String.fromInt x
 
-                        Decimal _ ->
-                            String.fromFloat model.displayedNumber
+                        Decimal y ->
+                            String.fromFloat y
                 ]
                 []
             ]
-        , button [ onClick <| UpdateNumber 7 ] [ text "7" ]
-        , button [ onClick <| UpdateNumber 8 ] [ text "8" ]
-        , button [ onClick <| UpdateNumber 9 ] [ text "9" ]
+        , button [ onClick <| UpdateNumber (Integer 7) ] [ text "7" ]
+        , button [ onClick <| UpdateNumber (Integer 8) ] [ text "8" ]
+        , button [ onClick <| UpdateNumber (Integer 9) ] [ text "9" ]
         , button [] [ text "/" ]
         , button [] [ text "%" ]
         , div []
-            [ button [ onClick <| UpdateNumber 4 ] [ text "4" ]
-            , button [ onClick <| UpdateNumber 5 ] [ text "5" ]
-            , button [ onClick <| UpdateNumber 6 ] [ text "6" ]
+            [ button [ onClick <| UpdateNumber (Integer 4) ] [ text "4" ]
+            , button [ onClick <| UpdateNumber (Integer 5) ] [ text "5" ]
+            , button [ onClick <| UpdateNumber (Integer 6) ] [ text "6" ]
             , button [] [ text "X" ]
             ]
         , div []
-            [ button [ onClick <| UpdateNumber 1 ] [ text "1" ]
-            , button [ onClick <| UpdateNumber 2 ] [ text "2" ]
-            , button [ onClick <| UpdateNumber 3 ] [ text "3" ]
+            [ button [ onClick <| UpdateNumber (Integer 1) ] [ text "1" ]
+            , button [ onClick <| UpdateNumber (Integer 2) ] [ text "2" ]
+            , button [ onClick <| UpdateNumber (Integer 3) ] [ text "3" ]
             , button [] [ text "-" ]
             ]
         , div []
-            [ button [ onClick <| UpdateNumber 0 ] [ text "0" ]
+            [ button [ onClick <| UpdateNumber (Integer 0) ] [ text "0" ]
             , button [] [ text "." ]
             , button [ onClick EqualsTo ] [ text "=" ]
             , button [ onClick AddNumbers ] [ text "+" ]
