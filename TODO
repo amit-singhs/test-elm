@@ -1,0 +1,6 @@
+Eliminate decimal operation error.
+
+Decimal Int Int --- First argument is the integer the number which is supposed to be the Float number, and the second argument is the number of decimal point operation.
+
+For e.g. Decimal 234 1 will translate to 23.4
+               2348 2 -- 23.48
