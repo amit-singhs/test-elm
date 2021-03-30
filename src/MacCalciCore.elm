@@ -1,6 +1,7 @@
 module MacCalciCore exposing (..)
 
 import Browser
+import Element.Input exposing (username)
 import Html exposing (Html, button, div, input, text)
 import Html.Attributes exposing (placeholder, style, value)
 import Html.Events exposing (onClick, onInput)
@@ -26,7 +27,7 @@ type Operation
 
 type NumberType
     = Integer Int
-    | Decimal Float
+    | Decimal Float Int
 
 
 type alias Model =
@@ -35,6 +36,7 @@ type alias Model =
     , displayedNumber : NumberType
     , operationType : Maybe Operation
     , result : NumberType
+    , decimalButtonIsOn : Bool
     }
 
 
@@ -45,14 +47,16 @@ init =
     , displayedNumber = Integer 0
     , operationType = Nothing
     , result = Integer 0
+    , decimalButtonIsOn = False
     }
 
 
 type Msg
     = AddNumbers
-    | UpdateNumber NumberType
+    | InsertDigit Int
     | AllClearTextField
     | EqualsTo
+    | DecimalButtonPressed
 
 
 update : Msg -> Model -> Model
@@ -64,27 +68,28 @@ update msg model =
                 , displayedNumber = model.firstNumber
             }
 
-        UpdateNumber num ->
+        InsertDigit digit ->
             let
-                insertAtOnes x y =
-                    case y of
-                        Integer u ->
-                            Integer ((x * 10) + u)
+                insertAtOnes : NumberType -> Int -> NumberType
+                insertAtOnes x d =
+                    case x of
+                        Integer v ->
+                            Integer ((v * 10) + d)
 
-                        Decimal v ->
-                            Decimal ((toFloat x * 10) + v)
+                        Decimal v decimalPlace ->
+                            Decimal (v + toFloat d / toFloat (10 ^ decimalPlace)) (decimalPlace + 1)
             in
             case model.operationType of
                 Nothing ->
                     { model
-                        | displayedNumber = insertAtOnes model.displayedNumber num
-                        , firstNumber = insertAtOnes model.displayedNumber num
+                        | displayedNumber = insertAtOnes model.displayedNumber digit
+                        , firstNumber = insertAtOnes model.displayedNumber digit
                     }
 
                 Just _ ->
                     { model
-                        | displayedNumber = insertAtOnes model.secondNumber num
-                        , secondNumber = insertAtOnes model.secondNumber num
+                        | displayedNumber = insertAtOnes model.secondNumber digit
+                        , secondNumber = insertAtOnes model.secondNumber digit
                     }
 
         AllClearTextField ->
@@ -95,18 +100,38 @@ update msg model =
                 calculateResult m =
                     case m.operationType of
                         Just Addition ->
-                            m.firstNumber + m.secondNumber
+                            --m.firstNumber + m.secondNumber
+                            Integer 1
 
                         Just Subtraction ->
-                            1
+                            --m.firstNumber - m.secondNumber
+                            Integer 3
 
                         Nothing ->
-                            2
+                            Integer 2
             in
             { model
                 | result = calculateResult model
                 , displayedNumber = calculateResult model
                 , firstNumber = calculateResult model
+            }
+
+        DecimalButtonPressed ->
+            let
+                convertToDecimal num =
+                    case num of
+                        Integer u ->
+                            Decimal (toFloat u) 1
+
+                        Decimal _ _ ->
+                            num
+            in
+            { model
+                | firstNumber = convertToDecimal model.firstNumber
+                , secondNumber = convertToDecimal model.secondNumber
+                , displayedNumber = convertToDecimal model.displayedNumber
+                , result = convertToDecimal model.result
+                , decimalButtonIsOn = True
             }
 
 
@@ -122,31 +147,31 @@ view model =
                         Integer x ->
                             String.fromInt x
 
-                        Decimal y ->
+                        Decimal y _ ->
                             String.fromFloat y
                 ]
                 []
             ]
-        , button [ onClick <| UpdateNumber (Integer 7) ] [ text "7" ]
-        , button [ onClick <| UpdateNumber (Integer 8) ] [ text "8" ]
-        , button [ onClick <| UpdateNumber (Integer 9) ] [ text "9" ]
+        , button [ onClick <| InsertDigit 7 ] [ text "7" ]
+        , button [ onClick <| InsertDigit 8 ] [ text "8" ]
+        , button [ onClick <| InsertDigit 9 ] [ text "9" ]
         , button [] [ text "/" ]
         , button [] [ text "%" ]
         , div []
-            [ button [ onClick <| UpdateNumber (Integer 4) ] [ text "4" ]
-            , button [ onClick <| UpdateNumber (Integer 5) ] [ text "5" ]
-            , button [ onClick <| UpdateNumber (Integer 6) ] [ text "6" ]
-            , button [] [ text "X" ]
+            [ button [ onClick <| InsertDigit 4 ] [ text "4" ]
+            , button [ onClick <| InsertDigit 5 ] [ text "5" ]
+            , button [ onClick <| InsertDigit 6 ] [ text "6" ]
+            , button [] [ text "x" ]
             ]
         , div []
-            [ button [ onClick <| UpdateNumber (Integer 1) ] [ text "1" ]
-            , button [ onClick <| UpdateNumber (Integer 2) ] [ text "2" ]
-            , button [ onClick <| UpdateNumber (Integer 3) ] [ text "3" ]
+            [ button [ onClick <| InsertDigit 1 ] [ text "1" ]
+            , button [ onClick <| InsertDigit 2 ] [ text "2" ]
+            , button [ onClick <| InsertDigit 3 ] [ text "3" ]
             , button [] [ text "-" ]
             ]
         , div []
-            [ button [ onClick <| UpdateNumber (Integer 0) ] [ text "0" ]
-            , button [] [ text "." ]
+            [ button [ onClick <| InsertDigit 0 ] [ text "0" ]
+            , button [ onClick DecimalButtonPressed ] [ text "." ]
             , button [ onClick EqualsTo ] [ text "=" ]
             , button [ onClick AddNumbers ] [ text "+" ]
             ]
