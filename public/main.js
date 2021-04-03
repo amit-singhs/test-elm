@@ -10571,7 +10571,6 @@ var $author$project$MacCalciCore$Decimal = F2(
 	function (a, b) {
 		return {$: 'Decimal', a: a, b: b};
 	});
-var $elm$core$Basics$pow = _Basics_pow;
 var $author$project$MacCalciCore$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -10592,10 +10591,7 @@ var $author$project$MacCalciCore$update = F2(
 						} else {
 							var v = x.a;
 							var decimalPlace = x.b;
-							return A2(
-								$author$project$MacCalciCore$Decimal,
-								v + (d / A2($elm$core$Basics$pow, 10, decimalPlace)),
-								decimalPlace + 1);
+							return A2($author$project$MacCalciCore$Decimal, (v * 10) + d, decimalPlace + 1);
 						}
 					});
 				var _v1 = model.operationType;
@@ -10642,7 +10638,7 @@ var $author$project$MacCalciCore$update = F2(
 				var convertToDecimal = function (num) {
 					if (num.$ === 'Integer') {
 						var u = num.a;
-						return A2($author$project$MacCalciCore$Decimal, u, 1);
+						return A2($author$project$MacCalciCore$Decimal, u, 0);
 					} else {
 						return num;
 					}
@@ -10666,6 +10662,18 @@ var $author$project$MacCalciCore$InsertDigit = function (a) {
 	return {$: 'InsertDigit', a: a};
 };
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
+var $elm$core$Basics$pow = _Basics_pow;
+var $author$project$MacCalciCore$renderDecimaltoString = function (numType) {
+	if (numType.$ === 'Integer') {
+		var i = numType.a;
+		return $elm$core$String$fromInt(i);
+	} else {
+		var intNumber = numType.a;
+		var decimalPlace = numType.b;
+		return $elm$core$String$fromFloat(
+			intNumber / A2($elm$core$Basics$pow, 10, decimalPlace));
+	}
+};
 var $author$project$MacCalciCore$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -10700,7 +10708,9 @@ var $author$project$MacCalciCore$view = function (model) {
 										return $elm$core$String$fromInt(x);
 									} else {
 										var y = _v0.a;
-										return $elm$core$String$fromFloat(y);
+										var z = _v0.b;
+										return (!z) ? ($elm$core$String$fromFloat(y) + '.') : $author$project$MacCalciCore$renderDecimaltoString(
+											A2($author$project$MacCalciCore$Decimal, y, z));
 									}
 								}())
 							]),

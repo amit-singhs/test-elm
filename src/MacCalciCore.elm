@@ -6,6 +6,7 @@ import Html exposing (Html, button, div, input, text)
 import Html.Attributes exposing (placeholder, style, value)
 import Html.Events exposing (onClick, onInput)
 import Main exposing (init, update, view)
+import Round
 
 
 
@@ -27,7 +28,7 @@ type Operation
 
 type NumberType
     = Integer Int
-    | Decimal Float Int
+    | Decimal Int Int
 
 
 type alias Model =
@@ -59,6 +60,20 @@ type Msg
     | DecimalButtonPressed
 
 
+renderDecimaltoString : NumberType -> String
+renderDecimaltoString numType =
+    case numType of
+        Integer i ->
+            String.fromInt i
+
+        Decimal intNumber decimalPlace ->
+            String.fromFloat (toFloat intNumber / toFloat (10 ^ decimalPlace))
+
+
+
+--intNumber / (10 ^ decimalPlaces)
+
+
 update : Msg -> Model -> Model
 update msg model =
     case msg of
@@ -77,7 +92,8 @@ update msg model =
                             Integer ((v * 10) + d)
 
                         Decimal v decimalPlace ->
-                            Decimal (v + toFloat d / toFloat (10 ^ decimalPlace)) (decimalPlace + 1)
+                            --Decimal (v + toFloat d / toFloat (10 ^ decimalPlace)) (decimalPlace + 1)
+                            Decimal ((v * 10) + d) (decimalPlace + 1)
             in
             case model.operationType of
                 Nothing ->
@@ -121,7 +137,7 @@ update msg model =
                 convertToDecimal num =
                     case num of
                         Integer u ->
-                            Decimal (toFloat u) 1
+                            Decimal u 0
 
                         Decimal _ _ ->
                             num
@@ -147,8 +163,12 @@ view model =
                         Integer x ->
                             String.fromInt x
 
-                        Decimal y _ ->
-                            String.fromFloat y
+                        Decimal y z ->
+                            if z == 0 then
+                                String.fromFloat (toFloat y) ++ "."
+
+                            else
+                                renderDecimaltoString (Decimal y z)
                 ]
                 []
             ]
