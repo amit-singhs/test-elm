@@ -10578,6 +10578,7 @@ var $author$project$MacCalciCore$update = F2(
 				return _Utils_update(
 					model,
 					{
+						decimalButtonIsOn: false,
 						displayedNumber: model.firstNumber,
 						operationType: $elm$core$Maybe$Just($author$project$MacCalciCore$Addition)
 					});
@@ -10643,15 +10644,26 @@ var $author$project$MacCalciCore$update = F2(
 						return num;
 					}
 				};
-				return _Utils_update(
-					model,
-					{
-						decimalButtonIsOn: true,
-						displayedNumber: convertToDecimal(model.displayedNumber),
-						firstNumber: convertToDecimal(model.firstNumber),
-						result: convertToDecimal(model.result),
-						secondNumber: convertToDecimal(model.secondNumber)
-					});
+				var _v6 = model.operationType;
+				if (_v6.$ === 'Nothing') {
+					return _Utils_update(
+						model,
+						{
+							decimalButtonIsOn: true,
+							displayedNumber: convertToDecimal(model.displayedNumber),
+							firstNumber: convertToDecimal(model.firstNumber),
+							result: convertToDecimal(model.result)
+						});
+				} else {
+					return _Utils_update(
+						model,
+						{
+							decimalButtonIsOn: true,
+							displayedNumber: convertToDecimal(model.displayedNumber),
+							result: convertToDecimal(model.result),
+							secondNumber: convertToDecimal(model.secondNumber)
+						});
+				}
 		}
 	});
 var $author$project$MacCalciCore$AddNumbers = {$: 'AddNumbers'};

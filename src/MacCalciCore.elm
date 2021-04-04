@@ -81,6 +81,7 @@ update msg model =
             { model
                 | operationType = Just Addition
                 , displayedNumber = model.firstNumber
+                , decimalButtonIsOn = False
             }
 
         InsertDigit digit ->
@@ -142,13 +143,22 @@ update msg model =
                         Decimal _ _ ->
                             num
             in
-            { model
-                | firstNumber = convertToDecimal model.firstNumber
-                , secondNumber = convertToDecimal model.secondNumber
-                , displayedNumber = convertToDecimal model.displayedNumber
-                , result = convertToDecimal model.result
-                , decimalButtonIsOn = True
-            }
+            case model.operationType of
+                Nothing ->
+                    { model
+                        | firstNumber = convertToDecimal model.firstNumber
+                        , displayedNumber = convertToDecimal model.displayedNumber
+                        , result = convertToDecimal model.result
+                        , decimalButtonIsOn = True
+                    }
+
+                _ ->
+                    { model
+                        | secondNumber = convertToDecimal model.secondNumber
+                        , displayedNumber = convertToDecimal model.displayedNumber
+                        , result = convertToDecimal model.result
+                        , decimalButtonIsOn = True
+                    }
 
 
 view : Model -> Html Msg
