@@ -60,6 +60,34 @@ type Msg
     | DecimalButtonPressed
 
 
+removeDecimal floatNumber =
+    if (floatNumber - toFloat (floor floatNumber)) /= 0 then
+        removeDecimal (10 * floatNumber)
+
+    else
+        round floatNumber
+
+
+renderDecimaltoFloat : NumberType -> Float
+renderDecimaltoFloat numType =
+    case numType of
+        Integer i ->
+            toFloat i
+
+        Decimal intNumber decimalPlaces ->
+            toFloat intNumber / toFloat (10 ^ decimalPlaces)
+
+
+renderFloatToDecimal : Float -> NumberType
+renderFloatToDecimal floatNumber =
+    case List.head (List.reverse (String.split "." (String.fromFloat floatNumber))) of
+        Just decimalPart ->
+            Decimal (removeDecimal floatNumber) (String.length decimalPart)
+
+        Nothing ->
+            Decimal 0 0
+
+
 renderDecimaltoString : NumberType -> String
 renderDecimaltoString numType =
     case numType of
@@ -118,14 +146,30 @@ update msg model =
                     case m.operationType of
                         Just Addition ->
                             --m.firstNumber + m.secondNumber
-                            Integer 1
+                            case m.firstNumber of
+                                Integer a ->
+                                    case m.secondNumber of
+                                        Integer b ->
+                                            Integer (a + b)
 
+                                        Decimal c d ->
+                                            renderFloatToDecimal (toFloat a + renderDecimaltoFloat (Decimal c d))
+
+                                Decimal e f ->
+                                    case m.secondNumber of
+                                        Integer g ->
+                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) + toFloat g)
+
+                                        Decimal h i ->
+                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) + renderDecimaltoFloat (Decimal h i))
+
+                        --Integer 1
                         Just Subtraction ->
                             --m.firstNumber - m.secondNumber
                             Integer 3
 
                         Nothing ->
-                            Integer 2
+                            Integer 0
             in
             { model
                 | result = calculateResult model

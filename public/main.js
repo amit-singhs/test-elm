@@ -10571,6 +10571,56 @@ var $author$project$MacCalciCore$Decimal = F2(
 	function (a, b) {
 		return {$: 'Decimal', a: a, b: b};
 	});
+var $elm$core$Basics$pow = _Basics_pow;
+var $author$project$MacCalciCore$renderDecimaltoFloat = function (numType) {
+	if (numType.$ === 'Integer') {
+		var i = numType.a;
+		return i;
+	} else {
+		var intNumber = numType.a;
+		var decimalPlaces = numType.b;
+		return intNumber / A2($elm$core$Basics$pow, 10, decimalPlaces);
+	}
+};
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$Basics$round = _Basics_round;
+var $author$project$MacCalciCore$removeDecimal = function (floatNumber) {
+	removeDecimal:
+	while (true) {
+		if (!(!(floatNumber - $elm$core$Basics$floor(floatNumber)))) {
+			var $temp$floatNumber = 10 * floatNumber;
+			floatNumber = $temp$floatNumber;
+			continue removeDecimal;
+		} else {
+			return $elm$core$Basics$round(floatNumber);
+		}
+	}
+};
+var $author$project$MacCalciCore$renderFloatToDecimal = function (floatNumber) {
+	var _v0 = $elm$core$List$head(
+		$elm$core$List$reverse(
+			A2(
+				$elm$core$String$split,
+				'.',
+				$elm$core$String$fromFloat(floatNumber))));
+	if (_v0.$ === 'Just') {
+		var decimalPart = _v0.a;
+		return A2(
+			$author$project$MacCalciCore$Decimal,
+			$author$project$MacCalciCore$removeDecimal(floatNumber),
+			$elm$core$String$length(decimalPart));
+	} else {
+		return A2($author$project$MacCalciCore$Decimal, 0, 0);
+	}
+};
 var $author$project$MacCalciCore$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -10619,13 +10669,44 @@ var $author$project$MacCalciCore$update = F2(
 					if (_v3.$ === 'Just') {
 						if (_v3.a.$ === 'Addition') {
 							var _v4 = _v3.a;
-							return $author$project$MacCalciCore$Integer(1);
+							var _v5 = m.firstNumber;
+							if (_v5.$ === 'Integer') {
+								var a = _v5.a;
+								var _v6 = m.secondNumber;
+								if (_v6.$ === 'Integer') {
+									var b = _v6.a;
+									return $author$project$MacCalciCore$Integer(a + b);
+								} else {
+									var c = _v6.a;
+									var d = _v6.b;
+									return $author$project$MacCalciCore$renderFloatToDecimal(
+										a + $author$project$MacCalciCore$renderDecimaltoFloat(
+											A2($author$project$MacCalciCore$Decimal, c, d)));
+								}
+							} else {
+								var e = _v5.a;
+								var f = _v5.b;
+								var _v7 = m.secondNumber;
+								if (_v7.$ === 'Integer') {
+									var g = _v7.a;
+									return $author$project$MacCalciCore$renderFloatToDecimal(
+										$author$project$MacCalciCore$renderDecimaltoFloat(
+											A2($author$project$MacCalciCore$Decimal, e, f)) + g);
+								} else {
+									var h = _v7.a;
+									var i = _v7.b;
+									return $author$project$MacCalciCore$renderFloatToDecimal(
+										$author$project$MacCalciCore$renderDecimaltoFloat(
+											A2($author$project$MacCalciCore$Decimal, e, f)) + $author$project$MacCalciCore$renderDecimaltoFloat(
+											A2($author$project$MacCalciCore$Decimal, h, i)));
+								}
+							}
 						} else {
-							var _v5 = _v3.a;
+							var _v8 = _v3.a;
 							return $author$project$MacCalciCore$Integer(3);
 						}
 					} else {
-						return $author$project$MacCalciCore$Integer(2);
+						return $author$project$MacCalciCore$Integer(0);
 					}
 				};
 				return _Utils_update(
@@ -10644,8 +10725,8 @@ var $author$project$MacCalciCore$update = F2(
 						return num;
 					}
 				};
-				var _v6 = model.operationType;
-				if (_v6.$ === 'Nothing') {
+				var _v9 = model.operationType;
+				if (_v9.$ === 'Nothing') {
 					return _Utils_update(
 						model,
 						{
@@ -10674,7 +10755,6 @@ var $author$project$MacCalciCore$InsertDigit = function (a) {
 	return {$: 'InsertDigit', a: a};
 };
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
-var $elm$core$Basics$pow = _Basics_pow;
 var $author$project$MacCalciCore$renderDecimaltoString = function (numType) {
 	if (numType.$ === 'Integer') {
 		var i = numType.a;
