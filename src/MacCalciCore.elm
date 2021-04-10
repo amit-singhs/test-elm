@@ -54,6 +54,7 @@ init =
 
 type Msg
     = AddNumbers
+    | SubtractNumbers
     | InsertDigit Int
     | AllClearTextField
     | EqualsTo
@@ -80,12 +81,16 @@ renderDecimaltoFloat numType =
 
 renderFloatToDecimal : Float -> NumberType
 renderFloatToDecimal floatNumber =
-    case List.head (List.reverse (String.split "." (String.fromFloat floatNumber))) of
-        Just decimalPart ->
-            Decimal (removeDecimal floatNumber) (String.length decimalPart)
+    if String.contains "." (String.fromFloat floatNumber) == False then
+        Integer (ceiling floatNumber)
 
-        Nothing ->
-            Decimal 0 0
+    else
+        case List.head (List.reverse (String.split "." (String.fromFloat floatNumber))) of
+            Just decimalPart ->
+                Decimal (removeDecimal floatNumber) (String.length decimalPart)
+
+            Nothing ->
+                Decimal 0 0
 
 
 renderDecimaltoString : NumberType -> String
@@ -108,6 +113,13 @@ update msg model =
         AddNumbers ->
             { model
                 | operationType = Just Addition
+                , displayedNumber = model.firstNumber
+                , decimalButtonIsOn = False
+            }
+
+        SubtractNumbers ->
+            { model
+                | operationType = Just Subtraction
                 , displayedNumber = model.firstNumber
                 , decimalButtonIsOn = False
             }
@@ -165,9 +177,25 @@ update msg model =
 
                         --Integer 1
                         Just Subtraction ->
-                            --m.firstNumber - m.secondNumber
-                            Integer 3
+                            case m.firstNumber of
+                                Integer a ->
+                                    case m.secondNumber of
+                                        Integer b ->
+                                            Integer (a - b)
 
+                                        Decimal c d ->
+                                            renderFloatToDecimal (toFloat a - renderDecimaltoFloat (Decimal c d))
+
+                                Decimal e f ->
+                                    case m.secondNumber of
+                                        Integer g ->
+                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) - toFloat g)
+
+                                        Decimal h i ->
+                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) - renderDecimaltoFloat (Decimal h i))
+
+                        --m.firstNumber - m.secondNumber
+                        --Integer 3
                         Nothing ->
                             Integer 0
             in
@@ -241,7 +269,7 @@ view model =
             [ button [ onClick <| InsertDigit 1 ] [ text "1" ]
             , button [ onClick <| InsertDigit 2 ] [ text "2" ]
             , button [ onClick <| InsertDigit 3 ] [ text "3" ]
-            , button [] [ text "-" ]
+            , button [ onClick SubtractNumbers ] [ text "-" ]
             ]
         , div []
             [ button [ onClick <| InsertDigit 0 ] [ text "0" ]
