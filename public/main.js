@@ -10571,6 +10571,7 @@ var $author$project$MacCalciCore$Decimal = F2(
 	function (a, b) {
 		return {$: 'Decimal', a: a, b: b};
 	});
+var $author$project$MacCalciCore$Subtraction = {$: 'Subtraction'};
 var $elm$core$Basics$pow = _Basics_pow;
 var $author$project$MacCalciCore$renderDecimaltoFloat = function (numType) {
 	if (numType.$ === 'Integer') {
@@ -10605,20 +10606,28 @@ var $author$project$MacCalciCore$removeDecimal = function (floatNumber) {
 	}
 };
 var $author$project$MacCalciCore$renderFloatToDecimal = function (floatNumber) {
-	var _v0 = $elm$core$List$head(
-		$elm$core$List$reverse(
-			A2(
-				$elm$core$String$split,
-				'.',
-				$elm$core$String$fromFloat(floatNumber))));
-	if (_v0.$ === 'Just') {
-		var decimalPart = _v0.a;
-		return A2(
-			$author$project$MacCalciCore$Decimal,
-			$author$project$MacCalciCore$removeDecimal(floatNumber),
-			$elm$core$String$length(decimalPart));
+	if (!A2(
+		$elm$core$String$contains,
+		'.',
+		$elm$core$String$fromFloat(floatNumber))) {
+		return $author$project$MacCalciCore$Integer(
+			$elm$core$Basics$ceiling(floatNumber));
 	} else {
-		return A2($author$project$MacCalciCore$Decimal, 0, 0);
+		var _v0 = $elm$core$List$head(
+			$elm$core$List$reverse(
+				A2(
+					$elm$core$String$split,
+					'.',
+					$elm$core$String$fromFloat(floatNumber))));
+		if (_v0.$ === 'Just') {
+			var decimalPart = _v0.a;
+			return A2(
+				$author$project$MacCalciCore$Decimal,
+				$author$project$MacCalciCore$removeDecimal(floatNumber),
+				$elm$core$String$length(decimalPart));
+		} else {
+			return A2($author$project$MacCalciCore$Decimal, 0, 0);
+		}
 	}
 };
 var $author$project$MacCalciCore$update = F2(
@@ -10631,6 +10640,14 @@ var $author$project$MacCalciCore$update = F2(
 						decimalButtonIsOn: false,
 						displayedNumber: model.firstNumber,
 						operationType: $elm$core$Maybe$Just($author$project$MacCalciCore$Addition)
+					});
+			case 'SubtractNumbers':
+				return _Utils_update(
+					model,
+					{
+						decimalButtonIsOn: false,
+						displayedNumber: model.firstNumber,
+						operationType: $elm$core$Maybe$Just($author$project$MacCalciCore$Subtraction)
 					});
 			case 'InsertDigit':
 				var digit = msg.a;
@@ -10703,7 +10720,38 @@ var $author$project$MacCalciCore$update = F2(
 							}
 						} else {
 							var _v8 = _v3.a;
-							return $author$project$MacCalciCore$Integer(3);
+							var _v9 = m.firstNumber;
+							if (_v9.$ === 'Integer') {
+								var a = _v9.a;
+								var _v10 = m.secondNumber;
+								if (_v10.$ === 'Integer') {
+									var b = _v10.a;
+									return $author$project$MacCalciCore$Integer(a - b);
+								} else {
+									var c = _v10.a;
+									var d = _v10.b;
+									return $author$project$MacCalciCore$renderFloatToDecimal(
+										a - $author$project$MacCalciCore$renderDecimaltoFloat(
+											A2($author$project$MacCalciCore$Decimal, c, d)));
+								}
+							} else {
+								var e = _v9.a;
+								var f = _v9.b;
+								var _v11 = m.secondNumber;
+								if (_v11.$ === 'Integer') {
+									var g = _v11.a;
+									return $author$project$MacCalciCore$renderFloatToDecimal(
+										$author$project$MacCalciCore$renderDecimaltoFloat(
+											A2($author$project$MacCalciCore$Decimal, e, f)) - g);
+								} else {
+									var h = _v11.a;
+									var i = _v11.b;
+									return $author$project$MacCalciCore$renderFloatToDecimal(
+										$author$project$MacCalciCore$renderDecimaltoFloat(
+											A2($author$project$MacCalciCore$Decimal, e, f)) - $author$project$MacCalciCore$renderDecimaltoFloat(
+											A2($author$project$MacCalciCore$Decimal, h, i)));
+								}
+							}
 						}
 					} else {
 						return $author$project$MacCalciCore$Integer(0);
@@ -10725,8 +10773,8 @@ var $author$project$MacCalciCore$update = F2(
 						return num;
 					}
 				};
-				var _v9 = model.operationType;
-				if (_v9.$ === 'Nothing') {
+				var _v12 = model.operationType;
+				if (_v12.$ === 'Nothing') {
 					return _Utils_update(
 						model,
 						{
@@ -10754,6 +10802,7 @@ var $author$project$MacCalciCore$EqualsTo = {$: 'EqualsTo'};
 var $author$project$MacCalciCore$InsertDigit = function (a) {
 	return {$: 'InsertDigit', a: a};
 };
+var $author$project$MacCalciCore$SubtractNumbers = {$: 'SubtractNumbers'};
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $author$project$MacCalciCore$renderDecimaltoString = function (numType) {
 	if (numType.$ === 'Integer') {
@@ -10941,7 +10990,10 @@ var $author$project$MacCalciCore$view = function (model) {
 							])),
 						A2(
 						$elm$html$Html$button,
-						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$MacCalciCore$SubtractNumbers)
+							]),
 						_List_fromArray(
 							[
 								$elm$html$Html$text('-')
@@ -10999,7 +11051,7 @@ var $author$project$MacCalciCore$view = function (model) {
 var $author$project$MacCalciCore$main = $elm$browser$Browser$sandbox(
 	{init: $author$project$MacCalciCore$init, update: $author$project$MacCalciCore$update, view: $author$project$MacCalciCore$view});
 _Platform_export({'MacCalciCore':{'init':$author$project$MacCalciCore$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"MacCalciCore.Msg","aliases":{},"unions":{"MacCalciCore.Msg":{"args":[],"tags":{"AddNumbers":[],"InsertDigit":["Basics.Int"],"AllClearTextField":[],"EqualsTo":[],"DecimalButtonPressed":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"MacCalciCore.Msg","aliases":{},"unions":{"MacCalciCore.Msg":{"args":[],"tags":{"AddNumbers":[],"SubtractNumbers":[],"InsertDigit":["Basics.Int"],"AllClearTextField":[],"EqualsTo":[],"DecimalButtonPressed":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});
 
 //////////////////// HMR BEGIN ////////////////////
 
