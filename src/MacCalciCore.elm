@@ -24,6 +24,8 @@ main =
 type Operation
     = Addition
     | Subtraction
+    | Multiplication
+    | Division
 
 
 type NumberType
@@ -55,6 +57,8 @@ init =
 type Msg
     = AddNumbers
     | SubtractNumbers
+    | MultiplyNumbers
+    | DivideNumbers
     | InsertDigit Int
     | AllClearTextField
     | EqualsTo
@@ -120,6 +124,20 @@ update msg model =
         SubtractNumbers ->
             { model
                 | operationType = Just Subtraction
+                , displayedNumber = model.firstNumber
+                , decimalButtonIsOn = False
+            }
+
+        MultiplyNumbers ->
+            { model
+                | operationType = Just Multiplication
+                , displayedNumber = model.firstNumber
+                , decimalButtonIsOn = False
+            }
+
+        DivideNumbers ->
+            { model
+                | operationType = Just Division
                 , displayedNumber = model.firstNumber
                 , decimalButtonIsOn = False
             }
@@ -194,6 +212,43 @@ update msg model =
                                         Decimal h i ->
                                             renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) - renderDecimaltoFloat (Decimal h i))
 
+                        Just Multiplication ->
+                            case m.firstNumber of
+                                Integer a ->
+                                    case m.secondNumber of
+                                        Integer b ->
+                                            Integer (a * b)
+
+                                        Decimal c d ->
+                                            renderFloatToDecimal (toFloat a * renderDecimaltoFloat (Decimal c d))
+
+                                Decimal e f ->
+                                    case m.secondNumber of
+                                        Integer g ->
+                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) * toFloat g)
+
+                                        Decimal h i ->
+                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) * renderDecimaltoFloat (Decimal h i))
+
+                        Just Division ->
+                            --m.firstNumber + m.secondNumber
+                            case m.firstNumber of
+                                Integer a ->
+                                    case m.secondNumber of
+                                        Integer b ->
+                                            Integer (a // b)
+
+                                        Decimal c d ->
+                                            renderFloatToDecimal (toFloat a / renderDecimaltoFloat (Decimal c d))
+
+                                Decimal e f ->
+                                    case m.secondNumber of
+                                        Integer g ->
+                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) / toFloat g)
+
+                                        Decimal h i ->
+                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) / renderDecimaltoFloat (Decimal h i))
+
                         --m.firstNumber - m.secondNumber
                         --Integer 3
                         Nothing ->
@@ -257,13 +312,13 @@ view model =
         , button [ onClick <| InsertDigit 7 ] [ text "7" ]
         , button [ onClick <| InsertDigit 8 ] [ text "8" ]
         , button [ onClick <| InsertDigit 9 ] [ text "9" ]
-        , button [] [ text "/" ]
+        , button [ onClick DivideNumbers ] [ text "/" ]
         , button [] [ text "%" ]
         , div []
             [ button [ onClick <| InsertDigit 4 ] [ text "4" ]
             , button [ onClick <| InsertDigit 5 ] [ text "5" ]
             , button [ onClick <| InsertDigit 6 ] [ text "6" ]
-            , button [] [ text "x" ]
+            , button [ onClick MultiplyNumbers ] [ text "x" ]
             ]
         , div []
             [ button [ onClick <| InsertDigit 1 ] [ text "1" ]
