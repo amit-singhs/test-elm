@@ -10892,6 +10892,9 @@ var $author$project$MacCalciCore$InsertDigit = function (a) {
 };
 var $author$project$MacCalciCore$MultiplyNumbers = {$: 'MultiplyNumbers'};
 var $author$project$MacCalciCore$SubtractNumbers = {$: 'SubtractNumbers'};
+var $author$project$MacCalciCore$appendPeriodToInt = function (integerToBeAppended) {
+	return $elm$core$String$fromFloat(integerToBeAppended) + '.';
+};
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $author$project$MacCalciCore$renderDecimaltoString = function (numType) {
 	if (numType.$ === 'Integer') {
@@ -10939,7 +10942,7 @@ var $author$project$MacCalciCore$view = function (model) {
 									} else {
 										var y = _v0.a;
 										var z = _v0.b;
-										return (!z) ? ($elm$core$String$fromFloat(y) + '.') : $author$project$MacCalciCore$renderDecimaltoString(
+										return (!z) ? $author$project$MacCalciCore$appendPeriodToInt(y) : $author$project$MacCalciCore$renderDecimaltoString(
 											A2($author$project$MacCalciCore$Decimal, y, z));
 									}
 								}())

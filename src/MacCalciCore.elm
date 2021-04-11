@@ -288,6 +288,11 @@ update msg model =
                     }
 
 
+appendPeriodToInt : Int -> String
+appendPeriodToInt integerToBeAppended =
+    String.fromFloat (toFloat integerToBeAppended) ++ "."
+
+
 view : Model -> Html Msg
 view model =
     div []
@@ -302,7 +307,7 @@ view model =
 
                         Decimal y z ->
                             if z == 0 then
-                                String.fromFloat (toFloat y) ++ "."
+                                appendPeriodToInt y
 
                             else
                                 renderDecimaltoString (Decimal y z)
