@@ -99,8 +99,8 @@ renderFloatToDecimal floatNumber =
                 Decimal 0 0
 
 
-renderDecimaltoString : NumberType -> String
-renderDecimaltoString numType =
+renderNumberTypetoString : NumberType -> String
+renderNumberTypetoString numType =
     case numType of
         Integer i ->
             String.fromInt i
@@ -345,18 +345,21 @@ view model =
                         , Border.color <| Element.rgb255 84 83 81
                         , padding 40
                         , Background.color <| Element.rgb255 82 82 81
+                        , Font.light
+                        , Font.alignRight
+                        , Font.color <| Element.rgb255 255 255 255
                         ]
                         { label = Input.labelHidden "Result output box"
                         , onChange = DoNothing
                         , placeholder = Just (Input.placeholder [ Font.size 60, Font.light, Font.alignRight, Font.color <| Element.rgb255 255 255 255 ] (text "0"))
-                        , text = ""
+                        , text = renderNumberTypetoString model.displayedNumber
                         }
                     ]
                 , row []
-                    [ column [] [ createButton "AC" 70 (DoNothing "") 0 0 0 0 103 102 101 ]
+                    [ column [] [ createButton "AC" 70 AllClearTextField 0 0 0 0 103 102 101 ]
                     , column [] [ createButton "+/-" 70 (DoNothing "") 0 0 0 0 103 102 101 ]
                     , column [] [ createButton "%" 70 (DoNothing "") 0 0 0 0 103 102 101 ]
-                    , column [] [ createButton "÷" 80 (DoNothing "") 0 0 0 0 242 163 60 ]
+                    , column [] [ createButton "÷" 80 DivideNumbers 0 0 0 0 242 163 60 ]
                     ]
                 , row []
                     [ column [] [ createButton "7" 70 (InsertDigit 7) 0 0 0 0 126 126 125 ]

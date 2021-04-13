@@ -10886,7 +10886,9 @@ var $author$project$MacCalciUI$update = F2(
 		}
 	});
 var $author$project$MacCalciUI$AddNumbers = {$: 'AddNumbers'};
+var $author$project$MacCalciUI$AllClearTextField = {$: 'AllClearTextField'};
 var $author$project$MacCalciUI$DecimalButtonPressed = {$: 'DecimalButtonPressed'};
+var $author$project$MacCalciUI$DivideNumbers = {$: 'DivideNumbers'};
 var $author$project$MacCalciUI$DoNothing = function (a) {
 	return {$: 'DoNothing', a: a};
 };
@@ -16924,6 +16926,17 @@ var $mdgriffith$elm_ui$Internal$Model$Px = function (a) {
 	return {$: 'Px', a: a};
 };
 var $mdgriffith$elm_ui$Element$px = $mdgriffith$elm_ui$Internal$Model$Px;
+var $author$project$MacCalciUI$renderNumberTypetoString = function (numType) {
+	if (numType.$ === 'Integer') {
+		var i = numType.a;
+		return $elm$core$String$fromInt(i);
+	} else {
+		var intNumber = numType.a;
+		var decimalPlace = numType.b;
+		return $elm$core$String$fromFloat(
+			intNumber / A2($elm$core$Basics$pow, 10, decimalPlace));
+	}
+};
 var $mdgriffith$elm_ui$Element$rgb255 = F3(
 	function (red, green, blue) {
 		return A4($mdgriffith$elm_ui$Internal$Model$Rgba, red / 255, green / 255, blue / 255, 1);
@@ -17986,7 +17999,11 @@ var $author$project$MacCalciUI$view = function (model) {
 											A3($mdgriffith$elm_ui$Element$rgb255, 84, 83, 81)),
 											$mdgriffith$elm_ui$Element$padding(40),
 											$mdgriffith$elm_ui$Element$Background$color(
-											A3($mdgriffith$elm_ui$Element$rgb255, 82, 82, 81))
+											A3($mdgriffith$elm_ui$Element$rgb255, 82, 82, 81)),
+											$mdgriffith$elm_ui$Element$Font$light,
+											$mdgriffith$elm_ui$Element$Font$alignRight,
+											$mdgriffith$elm_ui$Element$Font$color(
+											A3($mdgriffith$elm_ui$Element$rgb255, 255, 255, 255))
 										]),
 									{
 										label: $mdgriffith$elm_ui$Element$Input$labelHidden('Result output box'),
@@ -18003,7 +18020,7 @@ var $author$project$MacCalciUI$view = function (model) {
 														A3($mdgriffith$elm_ui$Element$rgb255, 255, 255, 255))
 													]),
 												$mdgriffith$elm_ui$Element$text('0'))),
-										text: ''
+										text: $author$project$MacCalciUI$renderNumberTypetoString(model.displayedNumber)
 									})
 								])),
 							A2(
@@ -18016,8 +18033,7 @@ var $author$project$MacCalciUI$view = function (model) {
 									_List_Nil,
 									_List_fromArray(
 										[
-											createButton('AC')(70)(
-											$author$project$MacCalciUI$DoNothing(''))(0)(0)(0)(0)(103)(102)(101)
+											createButton('AC')(70)($author$project$MacCalciUI$AllClearTextField)(0)(0)(0)(0)(103)(102)(101)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
@@ -18040,8 +18056,7 @@ var $author$project$MacCalciUI$view = function (model) {
 									_List_Nil,
 									_List_fromArray(
 										[
-											createButton('÷')(80)(
-											$author$project$MacCalciUI$DoNothing(''))(0)(0)(0)(0)(242)(163)(60)
+											createButton('÷')(80)($author$project$MacCalciUI$DivideNumbers)(0)(0)(0)(0)(242)(163)(60)
 										]))
 								])),
 							A2(
