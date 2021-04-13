@@ -4938,7 +4938,19 @@ function _Browser_load(url)
 		}
 	}));
 }
-var $author$project$MacCalciUI$init = {theNumber: 56};
+var $elm$core$Basics$False = {$: 'False'};
+var $author$project$MacCalciUI$Integer = function (a) {
+	return {$: 'Integer', a: a};
+};
+var $elm$core$Maybe$Nothing = {$: 'Nothing'};
+var $author$project$MacCalciUI$init = {
+	decimalButtonIsOn: false,
+	displayedNumber: $author$project$MacCalciUI$Integer(0),
+	firstNumber: $author$project$MacCalciUI$Integer(0),
+	operationType: $elm$core$Maybe$Nothing,
+	result: $author$project$MacCalciUI$Integer(0),
+	secondNumber: $author$project$MacCalciUI$Integer(0)
+};
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
@@ -5040,12 +5052,10 @@ var $elm$core$Result$Ok = function (a) {
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
-var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$Basics$add = _Basics_add;
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
 };
-var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
 var $elm$core$Basics$append = _Utils_append;
@@ -10556,20 +10566,336 @@ var $elm$browser$Browser$sandbox = function (impl) {
 			view: impl.view
 		});
 };
+var $author$project$MacCalciUI$Addition = {$: 'Addition'};
+var $author$project$MacCalciUI$Decimal = F2(
+	function (a, b) {
+		return {$: 'Decimal', a: a, b: b};
+	});
+var $author$project$MacCalciUI$Division = {$: 'Division'};
+var $author$project$MacCalciUI$Multiplication = {$: 'Multiplication'};
+var $author$project$MacCalciUI$Subtraction = {$: 'Subtraction'};
+var $elm$core$Basics$pow = _Basics_pow;
+var $author$project$MacCalciUI$renderDecimaltoFloat = function (numType) {
+	if (numType.$ === 'Integer') {
+		var i = numType.a;
+		return i;
+	} else {
+		var intNumber = numType.a;
+		var decimalPlaces = numType.b;
+		return intNumber / A2($elm$core$Basics$pow, 10, decimalPlaces);
+	}
+};
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$Basics$round = _Basics_round;
+var $author$project$MacCalciUI$removeDecimal = function (floatNumber) {
+	removeDecimal:
+	while (true) {
+		if (!(!(floatNumber - $elm$core$Basics$floor(floatNumber)))) {
+			var $temp$floatNumber = 10 * floatNumber;
+			floatNumber = $temp$floatNumber;
+			continue removeDecimal;
+		} else {
+			return $elm$core$Basics$round(floatNumber);
+		}
+	}
+};
+var $author$project$MacCalciUI$renderFloatToDecimal = function (floatNumber) {
+	if (!A2(
+		$elm$core$String$contains,
+		'.',
+		$elm$core$String$fromFloat(floatNumber))) {
+		return $author$project$MacCalciUI$Integer(
+			$elm$core$Basics$ceiling(floatNumber));
+	} else {
+		var _v0 = $elm$core$List$head(
+			$elm$core$List$reverse(
+				A2(
+					$elm$core$String$split,
+					'.',
+					$elm$core$String$fromFloat(floatNumber))));
+		if (_v0.$ === 'Just') {
+			var decimalPart = _v0.a;
+			return A2(
+				$author$project$MacCalciUI$Decimal,
+				$author$project$MacCalciUI$removeDecimal(floatNumber),
+				$elm$core$String$length(decimalPart));
+		} else {
+			return A2($author$project$MacCalciUI$Decimal, 0, 0);
+		}
+	}
+};
 var $author$project$MacCalciUI$update = F2(
 	function (msg, model) {
-		if (msg.$ === 'UpdateTheNumber') {
-			return _Utils_update(
-				model,
-				{theNumber: model.theNumber + 1});
-		} else {
-			var emptyString = msg.a;
-			return model;
+		switch (msg.$) {
+			case 'AddNumbers':
+				return _Utils_update(
+					model,
+					{
+						decimalButtonIsOn: false,
+						displayedNumber: model.firstNumber,
+						operationType: $elm$core$Maybe$Just($author$project$MacCalciUI$Addition)
+					});
+			case 'SubtractNumbers':
+				return _Utils_update(
+					model,
+					{
+						decimalButtonIsOn: false,
+						displayedNumber: model.firstNumber,
+						operationType: $elm$core$Maybe$Just($author$project$MacCalciUI$Subtraction)
+					});
+			case 'MultiplyNumbers':
+				return _Utils_update(
+					model,
+					{
+						decimalButtonIsOn: false,
+						displayedNumber: model.firstNumber,
+						operationType: $elm$core$Maybe$Just($author$project$MacCalciUI$Multiplication)
+					});
+			case 'DivideNumbers':
+				return _Utils_update(
+					model,
+					{
+						decimalButtonIsOn: false,
+						displayedNumber: model.firstNumber,
+						operationType: $elm$core$Maybe$Just($author$project$MacCalciUI$Division)
+					});
+			case 'InsertDigit':
+				var digit = msg.a;
+				var insertAtOnes = F2(
+					function (x, d) {
+						if (x.$ === 'Integer') {
+							var v = x.a;
+							return $author$project$MacCalciUI$Integer((v * 10) + d);
+						} else {
+							var v = x.a;
+							var decimalPlace = x.b;
+							return A2($author$project$MacCalciUI$Decimal, (v * 10) + d, decimalPlace + 1);
+						}
+					});
+				var _v1 = model.operationType;
+				if (_v1.$ === 'Nothing') {
+					return _Utils_update(
+						model,
+						{
+							displayedNumber: A2(insertAtOnes, model.displayedNumber, digit),
+							firstNumber: A2(insertAtOnes, model.displayedNumber, digit)
+						});
+				} else {
+					return _Utils_update(
+						model,
+						{
+							displayedNumber: A2(insertAtOnes, model.secondNumber, digit),
+							secondNumber: A2(insertAtOnes, model.secondNumber, digit)
+						});
+				}
+			case 'AllClearTextField':
+				return $author$project$MacCalciUI$init;
+			case 'EqualsTo':
+				var calculateResult = function (m) {
+					var _v3 = m.operationType;
+					if (_v3.$ === 'Just') {
+						switch (_v3.a.$) {
+							case 'Addition':
+								var _v4 = _v3.a;
+								var _v5 = m.firstNumber;
+								if (_v5.$ === 'Integer') {
+									var a = _v5.a;
+									var _v6 = m.secondNumber;
+									if (_v6.$ === 'Integer') {
+										var b = _v6.a;
+										return $author$project$MacCalciUI$Integer(a + b);
+									} else {
+										var c = _v6.a;
+										var d = _v6.b;
+										return $author$project$MacCalciUI$renderFloatToDecimal(
+											a + $author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, c, d)));
+									}
+								} else {
+									var e = _v5.a;
+									var f = _v5.b;
+									var _v7 = m.secondNumber;
+									if (_v7.$ === 'Integer') {
+										var g = _v7.a;
+										return $author$project$MacCalciUI$renderFloatToDecimal(
+											$author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, e, f)) + g);
+									} else {
+										var h = _v7.a;
+										var i = _v7.b;
+										return $author$project$MacCalciUI$renderFloatToDecimal(
+											$author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, e, f)) + $author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, h, i)));
+									}
+								}
+							case 'Subtraction':
+								var _v8 = _v3.a;
+								var _v9 = m.firstNumber;
+								if (_v9.$ === 'Integer') {
+									var a = _v9.a;
+									var _v10 = m.secondNumber;
+									if (_v10.$ === 'Integer') {
+										var b = _v10.a;
+										return $author$project$MacCalciUI$Integer(a - b);
+									} else {
+										var c = _v10.a;
+										var d = _v10.b;
+										return $author$project$MacCalciUI$renderFloatToDecimal(
+											a - $author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, c, d)));
+									}
+								} else {
+									var e = _v9.a;
+									var f = _v9.b;
+									var _v11 = m.secondNumber;
+									if (_v11.$ === 'Integer') {
+										var g = _v11.a;
+										return $author$project$MacCalciUI$renderFloatToDecimal(
+											$author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, e, f)) - g);
+									} else {
+										var h = _v11.a;
+										var i = _v11.b;
+										return $author$project$MacCalciUI$renderFloatToDecimal(
+											$author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, e, f)) - $author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, h, i)));
+									}
+								}
+							case 'Multiplication':
+								var _v12 = _v3.a;
+								var _v13 = m.firstNumber;
+								if (_v13.$ === 'Integer') {
+									var a = _v13.a;
+									var _v14 = m.secondNumber;
+									if (_v14.$ === 'Integer') {
+										var b = _v14.a;
+										return $author$project$MacCalciUI$Integer(a * b);
+									} else {
+										var c = _v14.a;
+										var d = _v14.b;
+										return $author$project$MacCalciUI$renderFloatToDecimal(
+											a * $author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, c, d)));
+									}
+								} else {
+									var e = _v13.a;
+									var f = _v13.b;
+									var _v15 = m.secondNumber;
+									if (_v15.$ === 'Integer') {
+										var g = _v15.a;
+										return $author$project$MacCalciUI$renderFloatToDecimal(
+											$author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, e, f)) * g);
+									} else {
+										var h = _v15.a;
+										var i = _v15.b;
+										return $author$project$MacCalciUI$renderFloatToDecimal(
+											$author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, e, f)) * $author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, h, i)));
+									}
+								}
+							default:
+								var _v16 = _v3.a;
+								var _v17 = m.firstNumber;
+								if (_v17.$ === 'Integer') {
+									var a = _v17.a;
+									var _v18 = m.secondNumber;
+									if (_v18.$ === 'Integer') {
+										var b = _v18.a;
+										return $author$project$MacCalciUI$Integer((a / b) | 0);
+									} else {
+										var c = _v18.a;
+										var d = _v18.b;
+										return $author$project$MacCalciUI$renderFloatToDecimal(
+											a / $author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, c, d)));
+									}
+								} else {
+									var e = _v17.a;
+									var f = _v17.b;
+									var _v19 = m.secondNumber;
+									if (_v19.$ === 'Integer') {
+										var g = _v19.a;
+										return $author$project$MacCalciUI$renderFloatToDecimal(
+											$author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, e, f)) / g);
+									} else {
+										var h = _v19.a;
+										var i = _v19.b;
+										return $author$project$MacCalciUI$renderFloatToDecimal(
+											$author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, e, f)) / $author$project$MacCalciUI$renderDecimaltoFloat(
+												A2($author$project$MacCalciUI$Decimal, h, i)));
+									}
+								}
+						}
+					} else {
+						return $author$project$MacCalciUI$Integer(0);
+					}
+				};
+				return _Utils_update(
+					model,
+					{
+						displayedNumber: calculateResult(model),
+						firstNumber: calculateResult(model),
+						result: calculateResult(model)
+					});
+			case 'DoNothing':
+				var str = msg.a;
+				return model;
+			default:
+				var convertToDecimal = function (num) {
+					if (num.$ === 'Integer') {
+						var u = num.a;
+						return A2($author$project$MacCalciUI$Decimal, u, 0);
+					} else {
+						return num;
+					}
+				};
+				var _v20 = model.operationType;
+				if (_v20.$ === 'Nothing') {
+					return _Utils_update(
+						model,
+						{
+							decimalButtonIsOn: true,
+							displayedNumber: convertToDecimal(model.displayedNumber),
+							firstNumber: convertToDecimal(model.firstNumber),
+							result: convertToDecimal(model.result)
+						});
+				} else {
+					return _Utils_update(
+						model,
+						{
+							decimalButtonIsOn: true,
+							displayedNumber: convertToDecimal(model.displayedNumber),
+							result: convertToDecimal(model.result),
+							secondNumber: convertToDecimal(model.secondNumber)
+						});
+				}
 		}
 	});
+var $author$project$MacCalciUI$AddNumbers = {$: 'AddNumbers'};
+var $author$project$MacCalciUI$DecimalButtonPressed = {$: 'DecimalButtonPressed'};
 var $author$project$MacCalciUI$DoNothing = function (a) {
 	return {$: 'DoNothing', a: a};
 };
+var $author$project$MacCalciUI$EqualsTo = {$: 'EqualsTo'};
+var $author$project$MacCalciUI$InsertDigit = function (a) {
+	return {$: 'InsertDigit', a: a};
+};
+var $author$project$MacCalciUI$MultiplyNumbers = {$: 'MultiplyNumbers'};
+var $author$project$MacCalciUI$SubtractNumbers = {$: 'SubtractNumbers'};
 var $mdgriffith$elm_ui$Internal$Model$Class = F2(
 	function (a, b) {
 		return {$: 'Class', a: a, b: b};
@@ -10736,7 +11062,6 @@ var $mdgriffith$elm_ui$Internal$Model$lengthClassName = function (x) {
 			return 'max' + ($elm$core$String$fromInt(max) + $mdgriffith$elm_ui$Internal$Model$lengthClassName(len));
 	}
 };
-var $elm$core$Basics$round = _Basics_round;
 var $mdgriffith$elm_ui$Internal$Model$floatClass = function (x) {
 	return $elm$core$String$fromInt(
 		$elm$core$Basics$round(x * 255));
@@ -16883,15 +17208,6 @@ var $mdgriffith$elm_ui$Element$Input$getHeight = function (attr) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $mdgriffith$elm_ui$Internal$Model$Label = function (a) {
 	return {$: 'Label', a: a};
 };
@@ -17577,47 +17893,64 @@ var $mdgriffith$elm_ui$Element$Input$text = $mdgriffith$elm_ui$Element$Input$tex
 	});
 var $mdgriffith$elm_ui$Element$Font$typeface = $mdgriffith$elm_ui$Internal$Model$Typeface;
 var $author$project$MacCalciUI$view = function (model) {
-	var createButton = F9(
-		function (buttonLabel, buttonlength, tL, tR, bL, bR, r, g, b) {
-			return A2(
-				$mdgriffith$elm_ui$Element$Input$button,
-				_List_fromArray(
-					[
-						$mdgriffith$elm_ui$Element$height(
-						$mdgriffith$elm_ui$Element$px(60)),
-						$mdgriffith$elm_ui$Element$width(
-						$mdgriffith$elm_ui$Element$px(buttonlength)),
-						$mdgriffith$elm_ui$Element$Border$width(1),
-						$mdgriffith$elm_ui$Element$Border$roundEach(
-						{bottomLeft: bL, bottomRight: bR, topLeft: tL, topRight: tR}),
-						$mdgriffith$elm_ui$Element$Border$color(
-						A3($mdgriffith$elm_ui$Element$rgb255, 84, 83, 81)),
-						$mdgriffith$elm_ui$Element$Font$size(25),
-						$mdgriffith$elm_ui$Element$Font$family(
-						_List_fromArray(
-							[
-								$mdgriffith$elm_ui$Element$Font$typeface('Helvetica')
-							])),
-						$mdgriffith$elm_ui$Element$Background$color(
-						A3($mdgriffith$elm_ui$Element$rgb255, r, g, b)),
-						$mdgriffith$elm_ui$Element$Font$color(
-						A3($mdgriffith$elm_ui$Element$rgb255, 228, 228, 228)),
-						$mdgriffith$elm_ui$Element$Font$medium,
-						$mdgriffith$elm_ui$Element$Font$center,
-						$mdgriffith$elm_ui$Element$mouseDown(
-						_List_fromArray(
-							[
-								$mdgriffith$elm_ui$Element$Background$color(
-								A3($mdgriffith$elm_ui$Element$rgb255, 180, 180, 179)),
-								$mdgriffith$elm_ui$Element$Border$color(
-								A3($mdgriffith$elm_ui$Element$rgb255, 84, 83, 81))
-							]))
-					]),
-				{
-					label: $mdgriffith$elm_ui$Element$text(buttonLabel),
-					onPress: $elm$core$Maybe$Nothing
-				});
-		});
+	var createButton = function (buttonLabel) {
+		return function (buttonlength) {
+			return function (buttonEvent) {
+				return function (tL) {
+					return function (tR) {
+						return function (bL) {
+							return function (bR) {
+								return function (r) {
+									return function (g) {
+										return function (b) {
+											return A2(
+												$mdgriffith$elm_ui$Element$Input$button,
+												_List_fromArray(
+													[
+														$mdgriffith$elm_ui$Element$height(
+														$mdgriffith$elm_ui$Element$px(60)),
+														$mdgriffith$elm_ui$Element$width(
+														$mdgriffith$elm_ui$Element$px(buttonlength)),
+														$mdgriffith$elm_ui$Element$Border$width(1),
+														$mdgriffith$elm_ui$Element$Border$roundEach(
+														{bottomLeft: bL, bottomRight: bR, topLeft: tL, topRight: tR}),
+														$mdgriffith$elm_ui$Element$Border$color(
+														A3($mdgriffith$elm_ui$Element$rgb255, 84, 83, 81)),
+														$mdgriffith$elm_ui$Element$Font$size(25),
+														$mdgriffith$elm_ui$Element$Font$family(
+														_List_fromArray(
+															[
+																$mdgriffith$elm_ui$Element$Font$typeface('Helvetica')
+															])),
+														$mdgriffith$elm_ui$Element$Background$color(
+														A3($mdgriffith$elm_ui$Element$rgb255, r, g, b)),
+														$mdgriffith$elm_ui$Element$Font$color(
+														A3($mdgriffith$elm_ui$Element$rgb255, 228, 228, 228)),
+														$mdgriffith$elm_ui$Element$Font$medium,
+														$mdgriffith$elm_ui$Element$Font$center,
+														$mdgriffith$elm_ui$Element$mouseDown(
+														_List_fromArray(
+															[
+																$mdgriffith$elm_ui$Element$Background$color(
+																A3($mdgriffith$elm_ui$Element$rgb255, 180, 180, 179)),
+																$mdgriffith$elm_ui$Element$Border$color(
+																A3($mdgriffith$elm_ui$Element$rgb255, 84, 83, 81))
+															]))
+													]),
+												{
+													label: $mdgriffith$elm_ui$Element$text(buttonLabel),
+													onPress: $elm$core$Maybe$Just(buttonEvent)
+												});
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
 	return A2(
 		$mdgriffith$elm_ui$Element$layout,
 		_List_fromArray(
@@ -17683,28 +18016,32 @@ var $author$project$MacCalciUI$view = function (model) {
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, 'AC', 70, 0, 0, 0, 0, 103, 102, 101)
+											createButton('AC')(70)(
+											$author$project$MacCalciUI$DoNothing(''))(0)(0)(0)(0)(103)(102)(101)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '+/-', 70, 0, 0, 0, 0, 103, 102, 101)
+											createButton('+/-')(70)(
+											$author$project$MacCalciUI$DoNothing(''))(0)(0)(0)(0)(103)(102)(101)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '%', 70, 0, 0, 0, 0, 103, 102, 101)
+											createButton('%')(70)(
+											$author$project$MacCalciUI$DoNothing(''))(0)(0)(0)(0)(103)(102)(101)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '÷', 80, 0, 0, 0, 0, 242, 163, 60)
+											createButton('÷')(80)(
+											$author$project$MacCalciUI$DoNothing(''))(0)(0)(0)(0)(242)(163)(60)
 										]))
 								])),
 							A2(
@@ -17717,28 +18054,31 @@ var $author$project$MacCalciUI$view = function (model) {
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '7', 70, 0, 0, 0, 0, 126, 126, 125)
+											createButton('7')(70)(
+											$author$project$MacCalciUI$InsertDigit(7))(0)(0)(0)(0)(126)(126)(125)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '8', 70, 0, 0, 0, 0, 126, 126, 125)
+											createButton('8')(70)(
+											$author$project$MacCalciUI$InsertDigit(8))(0)(0)(0)(0)(126)(126)(125)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '9', 70, 0, 0, 0, 0, 126, 126, 125)
+											createButton('9')(70)(
+											$author$project$MacCalciUI$InsertDigit(9))(0)(0)(0)(0)(126)(126)(125)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, 'X', 80, 0, 0, 0, 0, 242, 163, 60)
+											createButton('X')(80)($author$project$MacCalciUI$MultiplyNumbers)(0)(0)(0)(0)(242)(163)(60)
 										]))
 								])),
 							A2(
@@ -17751,28 +18091,31 @@ var $author$project$MacCalciUI$view = function (model) {
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '4', 70, 0, 0, 0, 0, 126, 126, 125)
+											createButton('4')(70)(
+											$author$project$MacCalciUI$InsertDigit(4))(0)(0)(0)(0)(126)(126)(125)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '5', 70, 0, 0, 0, 0, 126, 126, 125)
+											createButton('5')(70)(
+											$author$project$MacCalciUI$InsertDigit(5))(0)(0)(0)(0)(126)(126)(125)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '6', 70, 0, 0, 0, 0, 126, 126, 125)
+											createButton('6')(70)(
+											$author$project$MacCalciUI$InsertDigit(6))(0)(0)(0)(0)(126)(126)(125)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '—', 80, 0, 0, 0, 0, 242, 163, 60)
+											createButton('—')(80)($author$project$MacCalciUI$SubtractNumbers)(0)(0)(0)(0)(242)(163)(60)
 										]))
 								])),
 							A2(
@@ -17785,28 +18128,31 @@ var $author$project$MacCalciUI$view = function (model) {
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '1', 70, 0, 0, 0, 0, 126, 126, 125)
+											createButton('1')(70)(
+											$author$project$MacCalciUI$InsertDigit(1))(0)(0)(0)(0)(126)(126)(125)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '2', 70, 0, 0, 0, 0, 126, 126, 125)
+											createButton('2')(70)(
+											$author$project$MacCalciUI$InsertDigit(2))(0)(0)(0)(0)(126)(126)(125)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '3', 70, 0, 0, 0, 0, 126, 126, 125)
+											createButton('3')(70)(
+											$author$project$MacCalciUI$InsertDigit(3))(0)(0)(0)(0)(126)(126)(125)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '+', 80, 0, 0, 0, 0, 242, 163, 60)
+											createButton('+')(80)($author$project$MacCalciUI$AddNumbers)(0)(0)(0)(0)(242)(163)(60)
 										]))
 								])),
 							A2(
@@ -17819,21 +18165,22 @@ var $author$project$MacCalciUI$view = function (model) {
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '0', 140, 0, 0, 12, 0, 126, 126, 125)
+											createButton('0')(140)(
+											$author$project$MacCalciUI$InsertDigit(0))(0)(0)(12)(0)(126)(126)(125)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '.', 70, 0, 0, 0, 0, 126, 126, 125)
+											createButton('.')(70)($author$project$MacCalciUI$DecimalButtonPressed)(0)(0)(0)(0)(126)(126)(125)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
 									_List_Nil,
 									_List_fromArray(
 										[
-											A9(createButton, '=', 80, 0, 0, 0, 12, 242, 163, 60)
+											createButton('=')(80)($author$project$MacCalciUI$EqualsTo)(0)(0)(0)(12)(242)(163)(60)
 										]))
 								]))
 						]))
@@ -17842,7 +18189,7 @@ var $author$project$MacCalciUI$view = function (model) {
 var $author$project$MacCalciUI$main = $elm$browser$Browser$sandbox(
 	{init: $author$project$MacCalciUI$init, update: $author$project$MacCalciUI$update, view: $author$project$MacCalciUI$view});
 _Platform_export({'MacCalciUI':{'init':$author$project$MacCalciUI$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"MacCalciUI.Msg","aliases":{},"unions":{"MacCalciUI.Msg":{"args":[],"tags":{"UpdateTheNumber":[],"DoNothing":["String.String"]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"MacCalciUI.Msg","aliases":{},"unions":{"MacCalciUI.Msg":{"args":[],"tags":{"AddNumbers":[],"SubtractNumbers":[],"MultiplyNumbers":[],"DivideNumbers":[],"InsertDigit":["Basics.Int"],"AllClearTextField":[],"EqualsTo":[],"DecimalButtonPressed":[],"DoNothing":["String.String"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});
 
 //////////////////// HMR BEGIN ////////////////////
 
