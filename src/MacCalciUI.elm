@@ -27,6 +27,13 @@ type alias Model =
     }
 
 
+type Operation
+    = Addition
+    | Subtraction
+    | Multiplication
+    | Division
+
+
 type Msg
     = UpdateTheNumber
     | DoNothing String
