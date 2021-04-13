@@ -17966,10 +17966,7 @@ var $author$project$MacCalciUI$view = function (model) {
 	};
 	return A2(
 		$mdgriffith$elm_ui$Element$layout,
-		_List_fromArray(
-			[
-				$mdgriffith$elm_ui$Element$padding(40)
-			]),
+		_List_Nil,
 		A2(
 			$mdgriffith$elm_ui$Element$row,
 			_List_Nil,

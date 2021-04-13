@@ -330,7 +330,7 @@ view model =
                 , label = text buttonLabel
                 }
     in
-    Element.layout [ padding 40 ] <|
+    Element.layout [] <|
         row []
             [ column [ width fill ]
                 [ row []
