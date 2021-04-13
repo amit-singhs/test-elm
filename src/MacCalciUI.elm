@@ -335,8 +335,7 @@ view model =
             [ column [ width fill ]
                 [ row []
                     [ Input.text
-                        [ width fill
-                        , Border.roundEach
+                        [ Border.roundEach
                             { topLeft = 12
                             , topRight = 12
                             , bottomLeft = 0

@@ -17992,7 +17992,6 @@ var $author$project$MacCalciUI$view = function (model) {
 									$mdgriffith$elm_ui$Element$Input$text,
 									_List_fromArray(
 										[
-											$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
 											$mdgriffith$elm_ui$Element$Border$roundEach(
 											{bottomLeft: 0, bottomRight: 0, topLeft: 12, topRight: 12}),
 											$mdgriffith$elm_ui$Element$Border$color(
