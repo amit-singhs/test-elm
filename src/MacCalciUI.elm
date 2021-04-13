@@ -330,7 +330,7 @@ view model =
                 , label = text buttonLabel
                 }
     in
-    Element.layout [] <|
+    Element.layout [ padding 40 ] <|
         row []
             [ column [ width fill ]
                 [ row []
@@ -350,7 +350,7 @@ view model =
                         ]
                         { label = Input.labelHidden "Result output box"
                         , onChange = DoNothing
-                        , placeholder = Just (Input.placeholder [ Font.size 60, Font.light, Font.alignRight, Font.color <| Element.rgb255 255 255 255 ] (text "0"))
+                        , placeholder = Nothing
                         , text = renderNumberTypetoString model.displayedNumber
                         }
                     ]

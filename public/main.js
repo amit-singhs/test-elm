@@ -16917,11 +16917,6 @@ var $mdgriffith$elm_ui$Element$padding = function (x) {
 			f,
 			f));
 };
-var $mdgriffith$elm_ui$Element$Input$Placeholder = F2(
-	function (a, b) {
-		return {$: 'Placeholder', a: a, b: b};
-	});
-var $mdgriffith$elm_ui$Element$Input$placeholder = $mdgriffith$elm_ui$Element$Input$Placeholder;
 var $mdgriffith$elm_ui$Internal$Model$Px = function (a) {
 	return {$: 'Px', a: a};
 };
@@ -17966,7 +17961,10 @@ var $author$project$MacCalciUI$view = function (model) {
 	};
 	return A2(
 		$mdgriffith$elm_ui$Element$layout,
-		_List_Nil,
+		_List_fromArray(
+			[
+				$mdgriffith$elm_ui$Element$padding(40)
+			]),
 		A2(
 			$mdgriffith$elm_ui$Element$row,
 			_List_Nil,
@@ -18004,18 +18002,7 @@ var $author$project$MacCalciUI$view = function (model) {
 									{
 										label: $mdgriffith$elm_ui$Element$Input$labelHidden('Result output box'),
 										onChange: $author$project$MacCalciUI$DoNothing,
-										placeholder: $elm$core$Maybe$Just(
-											A2(
-												$mdgriffith$elm_ui$Element$Input$placeholder,
-												_List_fromArray(
-													[
-														$mdgriffith$elm_ui$Element$Font$size(60),
-														$mdgriffith$elm_ui$Element$Font$light,
-														$mdgriffith$elm_ui$Element$Font$alignRight,
-														$mdgriffith$elm_ui$Element$Font$color(
-														A3($mdgriffith$elm_ui$Element$rgb255, 255, 255, 255))
-													]),
-												$mdgriffith$elm_ui$Element$text('0'))),
+										placeholder: $elm$core$Maybe$Nothing,
 										text: $author$project$MacCalciUI$renderNumberTypetoString(model.displayedNumber)
 									})
 								])),
