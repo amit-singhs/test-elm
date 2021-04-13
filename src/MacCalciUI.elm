@@ -54,6 +54,36 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
+    let
+        createButton buttonLabel buttonlength tL tR bL bR r g b =
+            Input.button
+                [ height (px 60)
+                , width (px buttonlength)
+                , Border.width 1
+                , Border.roundEach
+                    { topLeft = tL
+                    , topRight = tR
+                    , bottomLeft = bL
+                    , bottomRight = bR
+                    }
+                , Border.color <| Element.rgb255 84 83 81
+                , Font.size 25
+                , Font.family
+                    [ Font.typeface "Helvetica"
+                    ]
+                , Background.color <| Element.rgb255 r g b
+                , Font.color <| Element.rgb255 228 228 228
+                , Font.medium
+                , Font.center
+                , mouseDown
+                    [ Background.color <| Element.rgb255 180 180 179
+                    , Border.color <| Element.rgb255 84 83 81
+                    ]
+                ]
+                { onPress = Nothing
+                , label = text buttonLabel
+                }
+    in
     Element.layout [ padding 40 ] <|
         row []
             [ column [ width fill ]
@@ -66,38 +96,44 @@ view model =
                             , bottomLeft = 0
                             , bottomRight = 0
                             }
+                        , Border.color <| Element.rgb255 84 83 81
                         , padding 40
-                        , Background.color <| Element.rgb255 87 86 85
+                        , Background.color <| Element.rgb255 82 82 81
                         ]
                         { label = Input.labelHidden "Result output box"
                         , onChange = DoNothing
-                        , placeholder = Just (Input.placeholder [] (text ""))
+                        , placeholder = Just (Input.placeholder [ Font.size 60, Font.light, Font.alignRight, Font.color <| Element.rgb255 255 255 255 ] (text "0"))
                         , text = ""
                         }
                     ]
                 , row []
-                    [ column []
-                        [ Input.button
-                            [ padding 19
-                            , Border.width 1
-                            , Border.color <| Element.rgb255 84 83 81
-                            , Background.color <| Element.rgb255 103 102 101
-                            , Font.color <| Element.rgb255 228 228 228
-                            , Font.variant Font.smallCaps
-                            , mouseDown
-                                [ Background.color <| Element.rgb255 51 204 204
-                                , Border.color <| Element.rgb255 51 204 204
-                                , Font.color <| Element.rgb255 232 232 232
-                                ]
-                            , mouseOver
-                                [ Background.color <| Element.rgb255 255 255 255
-                                , Border.color <| Element.rgb255 180 180 190
-                                ]
-                            ]
-                            { onPress = Nothing
-                            , label = text "AC"
-                            }
-                        ]
+                    [ column [] [ createButton "AC" 70 0 0 0 0 103 102 101 ]
+                    , column [] [ createButton "+/-" 70 0 0 0 0 103 102 101 ]
+                    , column [] [ createButton "%" 70 0 0 0 0 103 102 101 ]
+                    , column [] [ createButton "÷" 80 0 0 0 0 242 163 60 ]
+                    ]
+                , row []
+                    [ column [] [ createButton "7" 70 0 0 0 0 126 126 125 ]
+                    , column [] [ createButton "8" 70 0 0 0 0 126 126 125 ]
+                    , column [] [ createButton "9" 70 0 0 0 0 126 126 125 ]
+                    , column [] [ createButton "X" 80 0 0 0 0 242 163 60 ]
+                    ]
+                , row []
+                    [ column [] [ createButton "4" 70 0 0 0 0 126 126 125 ]
+                    , column [] [ createButton "5" 70 0 0 0 0 126 126 125 ]
+                    , column [] [ createButton "6" 70 0 0 0 0 126 126 125 ]
+                    , column [] [ createButton "—" 80 0 0 0 0 242 163 60 ]
+                    ]
+                , row []
+                    [ column [] [ createButton "1" 70 0 0 0 0 126 126 125 ]
+                    , column [] [ createButton "2" 70 0 0 0 0 126 126 125 ]
+                    , column [] [ createButton "3" 70 0 0 0 0 126 126 125 ]
+                    , column [] [ createButton "+" 80 0 0 0 0 242 163 60 ]
+                    ]
+                , row []
+                    [ column [] [ createButton "0" 140 0 0 12 0 126 126 125 ]
+                    , column [] [ createButton "." 70 0 0 0 0 126 126 125 ]
+                    , column [] [ createButton "=" 80 0 0 0 12 242 163 60 ]
                     ]
                 ]
             ]
