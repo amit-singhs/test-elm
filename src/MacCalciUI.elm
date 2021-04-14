@@ -60,6 +60,7 @@ type Msg
     | SubtractNumbers
     | MultiplyNumbers
     | DivideNumbers
+    | DivideByHundred
     | InsertDigit Int
     | AllClearTextField
     | EqualsTo
@@ -75,8 +76,8 @@ removeDecimal floatNumber =
         round floatNumber
 
 
-renderDecimaltoFloat : NumberType -> Float
-renderDecimaltoFloat numType =
+renderNumberTypetoFloat : NumberType -> Float
+renderNumberTypetoFloat numType =
     case numType of
         Integer i ->
             toFloat i
@@ -85,8 +86,8 @@ renderDecimaltoFloat numType =
             toFloat intNumber / toFloat (10 ^ decimalPlaces)
 
 
-renderFloatToDecimal : Float -> NumberType
-renderFloatToDecimal floatNumber =
+renderFloatToNumberType : Float -> NumberType
+renderFloatToNumberType floatNumber =
     if String.contains "." (String.fromFloat floatNumber) == False then
         Integer (ceiling floatNumber)
 
@@ -172,6 +173,17 @@ update msg model =
         AllClearTextField ->
             init
 
+        DivideByHundred ->
+            { model
+                | displayedNumber =
+                    case model.displayedNumber of
+                        Integer x ->
+                            renderFloatToNumberType (toFloat x / 100)
+
+                        Decimal x y ->
+                            renderFloatToNumberType (renderNumberTypetoFloat (Decimal x y) / 100)
+            }
+
         EqualsTo ->
             let
                 calculateResult m =
@@ -185,15 +197,15 @@ update msg model =
                                             Integer (a + b)
 
                                         Decimal c d ->
-                                            renderFloatToDecimal (toFloat a + renderDecimaltoFloat (Decimal c d))
+                                            renderFloatToNumberType (toFloat a + renderNumberTypetoFloat (Decimal c d))
 
                                 Decimal e f ->
                                     case m.secondNumber of
                                         Integer g ->
-                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) + toFloat g)
+                                            renderFloatToNumberType (renderNumberTypetoFloat (Decimal e f) + toFloat g)
 
                                         Decimal h i ->
-                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) + renderDecimaltoFloat (Decimal h i))
+                                            renderFloatToNumberType (renderNumberTypetoFloat (Decimal e f) + renderNumberTypetoFloat (Decimal h i))
 
                         --Integer 1
                         Just Subtraction ->
@@ -204,15 +216,15 @@ update msg model =
                                             Integer (a - b)
 
                                         Decimal c d ->
-                                            renderFloatToDecimal (toFloat a - renderDecimaltoFloat (Decimal c d))
+                                            renderFloatToNumberType (toFloat a - renderNumberTypetoFloat (Decimal c d))
 
                                 Decimal e f ->
                                     case m.secondNumber of
                                         Integer g ->
-                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) - toFloat g)
+                                            renderFloatToNumberType (renderNumberTypetoFloat (Decimal e f) - toFloat g)
 
                                         Decimal h i ->
-                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) - renderDecimaltoFloat (Decimal h i))
+                                            renderFloatToNumberType (renderNumberTypetoFloat (Decimal e f) - renderNumberTypetoFloat (Decimal h i))
 
                         Just Multiplication ->
                             case m.firstNumber of
@@ -222,15 +234,15 @@ update msg model =
                                             Integer (a * b)
 
                                         Decimal c d ->
-                                            renderFloatToDecimal (toFloat a * renderDecimaltoFloat (Decimal c d))
+                                            renderFloatToNumberType (toFloat a * renderNumberTypetoFloat (Decimal c d))
 
                                 Decimal e f ->
                                     case m.secondNumber of
                                         Integer g ->
-                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) * toFloat g)
+                                            renderFloatToNumberType (renderNumberTypetoFloat (Decimal e f) * toFloat g)
 
                                         Decimal h i ->
-                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) * renderDecimaltoFloat (Decimal h i))
+                                            renderFloatToNumberType (renderNumberTypetoFloat (Decimal e f) * renderNumberTypetoFloat (Decimal h i))
 
                         Just Division ->
                             --m.firstNumber + m.secondNumber
@@ -241,15 +253,15 @@ update msg model =
                                             Integer (a // b)
 
                                         Decimal c d ->
-                                            renderFloatToDecimal (toFloat a / renderDecimaltoFloat (Decimal c d))
+                                            renderFloatToNumberType (toFloat a / renderNumberTypetoFloat (Decimal c d))
 
                                 Decimal e f ->
                                     case m.secondNumber of
                                         Integer g ->
-                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) / toFloat g)
+                                            renderFloatToNumberType (renderNumberTypetoFloat (Decimal e f) / toFloat g)
 
                                         Decimal h i ->
-                                            renderFloatToDecimal (renderDecimaltoFloat (Decimal e f) / renderDecimaltoFloat (Decimal h i))
+                                            renderFloatToNumberType (renderNumberTypetoFloat (Decimal e f) / renderNumberTypetoFloat (Decimal h i))
 
                         --m.firstNumber - m.secondNumber
                         --Integer 3
@@ -357,7 +369,7 @@ view model =
                 , row []
                     [ column [] [ createButton "AC" 70 AllClearTextField 0 0 0 0 103 102 101 ]
                     , column [] [ createButton "+/-" 70 (DoNothing "") 0 0 0 0 103 102 101 ]
-                    , column [] [ createButton "%" 70 (DoNothing "") 0 0 0 0 103 102 101 ]
+                    , column [] [ createButton "%" 70 DivideByHundred 0 0 0 0 103 102 101 ]
                     , column [] [ createButton "÷" 80 DivideNumbers 0 0 0 0 242 163 60 ]
                     ]
                 , row []

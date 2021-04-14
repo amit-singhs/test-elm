@@ -10574,17 +10574,6 @@ var $author$project$MacCalciUI$Decimal = F2(
 var $author$project$MacCalciUI$Division = {$: 'Division'};
 var $author$project$MacCalciUI$Multiplication = {$: 'Multiplication'};
 var $author$project$MacCalciUI$Subtraction = {$: 'Subtraction'};
-var $elm$core$Basics$pow = _Basics_pow;
-var $author$project$MacCalciUI$renderDecimaltoFloat = function (numType) {
-	if (numType.$ === 'Integer') {
-		var i = numType.a;
-		return i;
-	} else {
-		var intNumber = numType.a;
-		var decimalPlaces = numType.b;
-		return intNumber / A2($elm$core$Basics$pow, 10, decimalPlaces);
-	}
-};
 var $elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -10607,7 +10596,7 @@ var $author$project$MacCalciUI$removeDecimal = function (floatNumber) {
 		}
 	}
 };
-var $author$project$MacCalciUI$renderFloatToDecimal = function (floatNumber) {
+var $author$project$MacCalciUI$renderFloatToNumberType = function (floatNumber) {
 	if (!A2(
 		$elm$core$String$contains,
 		'.',
@@ -10630,6 +10619,17 @@ var $author$project$MacCalciUI$renderFloatToDecimal = function (floatNumber) {
 		} else {
 			return A2($author$project$MacCalciUI$Decimal, 0, 0);
 		}
+	}
+};
+var $elm$core$Basics$pow = _Basics_pow;
+var $author$project$MacCalciUI$renderNumberTypetoFloat = function (numType) {
+	if (numType.$ === 'Integer') {
+		var i = numType.a;
+		return i;
+	} else {
+		var intNumber = numType.a;
+		var decimalPlaces = numType.b;
+		return intNumber / A2($elm$core$Basics$pow, 10, decimalPlaces);
 	}
 };
 var $author$project$MacCalciUI$update = F2(
@@ -10698,144 +10698,162 @@ var $author$project$MacCalciUI$update = F2(
 				}
 			case 'AllClearTextField':
 				return $author$project$MacCalciUI$init;
+			case 'DivideByHundred':
+				return _Utils_update(
+					model,
+					{
+						displayedNumber: function () {
+							var _v3 = model.displayedNumber;
+							if (_v3.$ === 'Integer') {
+								var x = _v3.a;
+								return $author$project$MacCalciUI$renderFloatToNumberType(x / 100);
+							} else {
+								var x = _v3.a;
+								var y = _v3.b;
+								return $author$project$MacCalciUI$renderFloatToNumberType(
+									$author$project$MacCalciUI$renderNumberTypetoFloat(
+										A2($author$project$MacCalciUI$Decimal, x, y)) / 100);
+							}
+						}()
+					});
 			case 'EqualsTo':
 				var calculateResult = function (m) {
-					var _v3 = m.operationType;
-					if (_v3.$ === 'Just') {
-						switch (_v3.a.$) {
+					var _v4 = m.operationType;
+					if (_v4.$ === 'Just') {
+						switch (_v4.a.$) {
 							case 'Addition':
-								var _v4 = _v3.a;
-								var _v5 = m.firstNumber;
-								if (_v5.$ === 'Integer') {
-									var a = _v5.a;
-									var _v6 = m.secondNumber;
-									if (_v6.$ === 'Integer') {
-										var b = _v6.a;
+								var _v5 = _v4.a;
+								var _v6 = m.firstNumber;
+								if (_v6.$ === 'Integer') {
+									var a = _v6.a;
+									var _v7 = m.secondNumber;
+									if (_v7.$ === 'Integer') {
+										var b = _v7.a;
 										return $author$project$MacCalciUI$Integer(a + b);
 									} else {
-										var c = _v6.a;
-										var d = _v6.b;
-										return $author$project$MacCalciUI$renderFloatToDecimal(
-											a + $author$project$MacCalciUI$renderDecimaltoFloat(
+										var c = _v7.a;
+										var d = _v7.b;
+										return $author$project$MacCalciUI$renderFloatToNumberType(
+											a + $author$project$MacCalciUI$renderNumberTypetoFloat(
 												A2($author$project$MacCalciUI$Decimal, c, d)));
 									}
 								} else {
-									var e = _v5.a;
-									var f = _v5.b;
-									var _v7 = m.secondNumber;
-									if (_v7.$ === 'Integer') {
-										var g = _v7.a;
-										return $author$project$MacCalciUI$renderFloatToDecimal(
-											$author$project$MacCalciUI$renderDecimaltoFloat(
+									var e = _v6.a;
+									var f = _v6.b;
+									var _v8 = m.secondNumber;
+									if (_v8.$ === 'Integer') {
+										var g = _v8.a;
+										return $author$project$MacCalciUI$renderFloatToNumberType(
+											$author$project$MacCalciUI$renderNumberTypetoFloat(
 												A2($author$project$MacCalciUI$Decimal, e, f)) + g);
 									} else {
-										var h = _v7.a;
-										var i = _v7.b;
-										return $author$project$MacCalciUI$renderFloatToDecimal(
-											$author$project$MacCalciUI$renderDecimaltoFloat(
-												A2($author$project$MacCalciUI$Decimal, e, f)) + $author$project$MacCalciUI$renderDecimaltoFloat(
+										var h = _v8.a;
+										var i = _v8.b;
+										return $author$project$MacCalciUI$renderFloatToNumberType(
+											$author$project$MacCalciUI$renderNumberTypetoFloat(
+												A2($author$project$MacCalciUI$Decimal, e, f)) + $author$project$MacCalciUI$renderNumberTypetoFloat(
 												A2($author$project$MacCalciUI$Decimal, h, i)));
 									}
 								}
 							case 'Subtraction':
-								var _v8 = _v3.a;
-								var _v9 = m.firstNumber;
-								if (_v9.$ === 'Integer') {
-									var a = _v9.a;
-									var _v10 = m.secondNumber;
-									if (_v10.$ === 'Integer') {
-										var b = _v10.a;
+								var _v9 = _v4.a;
+								var _v10 = m.firstNumber;
+								if (_v10.$ === 'Integer') {
+									var a = _v10.a;
+									var _v11 = m.secondNumber;
+									if (_v11.$ === 'Integer') {
+										var b = _v11.a;
 										return $author$project$MacCalciUI$Integer(a - b);
 									} else {
-										var c = _v10.a;
-										var d = _v10.b;
-										return $author$project$MacCalciUI$renderFloatToDecimal(
-											a - $author$project$MacCalciUI$renderDecimaltoFloat(
+										var c = _v11.a;
+										var d = _v11.b;
+										return $author$project$MacCalciUI$renderFloatToNumberType(
+											a - $author$project$MacCalciUI$renderNumberTypetoFloat(
 												A2($author$project$MacCalciUI$Decimal, c, d)));
 									}
 								} else {
-									var e = _v9.a;
-									var f = _v9.b;
-									var _v11 = m.secondNumber;
-									if (_v11.$ === 'Integer') {
-										var g = _v11.a;
-										return $author$project$MacCalciUI$renderFloatToDecimal(
-											$author$project$MacCalciUI$renderDecimaltoFloat(
+									var e = _v10.a;
+									var f = _v10.b;
+									var _v12 = m.secondNumber;
+									if (_v12.$ === 'Integer') {
+										var g = _v12.a;
+										return $author$project$MacCalciUI$renderFloatToNumberType(
+											$author$project$MacCalciUI$renderNumberTypetoFloat(
 												A2($author$project$MacCalciUI$Decimal, e, f)) - g);
 									} else {
-										var h = _v11.a;
-										var i = _v11.b;
-										return $author$project$MacCalciUI$renderFloatToDecimal(
-											$author$project$MacCalciUI$renderDecimaltoFloat(
-												A2($author$project$MacCalciUI$Decimal, e, f)) - $author$project$MacCalciUI$renderDecimaltoFloat(
+										var h = _v12.a;
+										var i = _v12.b;
+										return $author$project$MacCalciUI$renderFloatToNumberType(
+											$author$project$MacCalciUI$renderNumberTypetoFloat(
+												A2($author$project$MacCalciUI$Decimal, e, f)) - $author$project$MacCalciUI$renderNumberTypetoFloat(
 												A2($author$project$MacCalciUI$Decimal, h, i)));
 									}
 								}
 							case 'Multiplication':
-								var _v12 = _v3.a;
-								var _v13 = m.firstNumber;
-								if (_v13.$ === 'Integer') {
-									var a = _v13.a;
-									var _v14 = m.secondNumber;
-									if (_v14.$ === 'Integer') {
-										var b = _v14.a;
+								var _v13 = _v4.a;
+								var _v14 = m.firstNumber;
+								if (_v14.$ === 'Integer') {
+									var a = _v14.a;
+									var _v15 = m.secondNumber;
+									if (_v15.$ === 'Integer') {
+										var b = _v15.a;
 										return $author$project$MacCalciUI$Integer(a * b);
 									} else {
-										var c = _v14.a;
-										var d = _v14.b;
-										return $author$project$MacCalciUI$renderFloatToDecimal(
-											a * $author$project$MacCalciUI$renderDecimaltoFloat(
+										var c = _v15.a;
+										var d = _v15.b;
+										return $author$project$MacCalciUI$renderFloatToNumberType(
+											a * $author$project$MacCalciUI$renderNumberTypetoFloat(
 												A2($author$project$MacCalciUI$Decimal, c, d)));
 									}
 								} else {
-									var e = _v13.a;
-									var f = _v13.b;
-									var _v15 = m.secondNumber;
-									if (_v15.$ === 'Integer') {
-										var g = _v15.a;
-										return $author$project$MacCalciUI$renderFloatToDecimal(
-											$author$project$MacCalciUI$renderDecimaltoFloat(
+									var e = _v14.a;
+									var f = _v14.b;
+									var _v16 = m.secondNumber;
+									if (_v16.$ === 'Integer') {
+										var g = _v16.a;
+										return $author$project$MacCalciUI$renderFloatToNumberType(
+											$author$project$MacCalciUI$renderNumberTypetoFloat(
 												A2($author$project$MacCalciUI$Decimal, e, f)) * g);
 									} else {
-										var h = _v15.a;
-										var i = _v15.b;
-										return $author$project$MacCalciUI$renderFloatToDecimal(
-											$author$project$MacCalciUI$renderDecimaltoFloat(
-												A2($author$project$MacCalciUI$Decimal, e, f)) * $author$project$MacCalciUI$renderDecimaltoFloat(
+										var h = _v16.a;
+										var i = _v16.b;
+										return $author$project$MacCalciUI$renderFloatToNumberType(
+											$author$project$MacCalciUI$renderNumberTypetoFloat(
+												A2($author$project$MacCalciUI$Decimal, e, f)) * $author$project$MacCalciUI$renderNumberTypetoFloat(
 												A2($author$project$MacCalciUI$Decimal, h, i)));
 									}
 								}
 							default:
-								var _v16 = _v3.a;
-								var _v17 = m.firstNumber;
-								if (_v17.$ === 'Integer') {
-									var a = _v17.a;
-									var _v18 = m.secondNumber;
-									if (_v18.$ === 'Integer') {
-										var b = _v18.a;
+								var _v17 = _v4.a;
+								var _v18 = m.firstNumber;
+								if (_v18.$ === 'Integer') {
+									var a = _v18.a;
+									var _v19 = m.secondNumber;
+									if (_v19.$ === 'Integer') {
+										var b = _v19.a;
 										return $author$project$MacCalciUI$Integer((a / b) | 0);
 									} else {
-										var c = _v18.a;
-										var d = _v18.b;
-										return $author$project$MacCalciUI$renderFloatToDecimal(
-											a / $author$project$MacCalciUI$renderDecimaltoFloat(
+										var c = _v19.a;
+										var d = _v19.b;
+										return $author$project$MacCalciUI$renderFloatToNumberType(
+											a / $author$project$MacCalciUI$renderNumberTypetoFloat(
 												A2($author$project$MacCalciUI$Decimal, c, d)));
 									}
 								} else {
-									var e = _v17.a;
-									var f = _v17.b;
-									var _v19 = m.secondNumber;
-									if (_v19.$ === 'Integer') {
-										var g = _v19.a;
-										return $author$project$MacCalciUI$renderFloatToDecimal(
-											$author$project$MacCalciUI$renderDecimaltoFloat(
+									var e = _v18.a;
+									var f = _v18.b;
+									var _v20 = m.secondNumber;
+									if (_v20.$ === 'Integer') {
+										var g = _v20.a;
+										return $author$project$MacCalciUI$renderFloatToNumberType(
+											$author$project$MacCalciUI$renderNumberTypetoFloat(
 												A2($author$project$MacCalciUI$Decimal, e, f)) / g);
 									} else {
-										var h = _v19.a;
-										var i = _v19.b;
-										return $author$project$MacCalciUI$renderFloatToDecimal(
-											$author$project$MacCalciUI$renderDecimaltoFloat(
-												A2($author$project$MacCalciUI$Decimal, e, f)) / $author$project$MacCalciUI$renderDecimaltoFloat(
+										var h = _v20.a;
+										var i = _v20.b;
+										return $author$project$MacCalciUI$renderFloatToNumberType(
+											$author$project$MacCalciUI$renderNumberTypetoFloat(
+												A2($author$project$MacCalciUI$Decimal, e, f)) / $author$project$MacCalciUI$renderNumberTypetoFloat(
 												A2($author$project$MacCalciUI$Decimal, h, i)));
 									}
 								}
@@ -10863,8 +10881,8 @@ var $author$project$MacCalciUI$update = F2(
 						return num;
 					}
 				};
-				var _v20 = model.operationType;
-				if (_v20.$ === 'Nothing') {
+				var _v21 = model.operationType;
+				if (_v21.$ === 'Nothing') {
 					return _Utils_update(
 						model,
 						{
@@ -10888,6 +10906,7 @@ var $author$project$MacCalciUI$update = F2(
 var $author$project$MacCalciUI$AddNumbers = {$: 'AddNumbers'};
 var $author$project$MacCalciUI$AllClearTextField = {$: 'AllClearTextField'};
 var $author$project$MacCalciUI$DecimalButtonPressed = {$: 'DecimalButtonPressed'};
+var $author$project$MacCalciUI$DivideByHundred = {$: 'DivideByHundred'};
 var $author$project$MacCalciUI$DivideNumbers = {$: 'DivideNumbers'};
 var $author$project$MacCalciUI$DoNothing = function (a) {
 	return {$: 'DoNothing', a: a};
@@ -18031,8 +18050,7 @@ var $author$project$MacCalciUI$view = function (model) {
 									_List_Nil,
 									_List_fromArray(
 										[
-											createButton('%')(70)(
-											$author$project$MacCalciUI$DoNothing(''))(0)(0)(0)(0)(103)(102)(101)
+											createButton('%')(70)($author$project$MacCalciUI$DivideByHundred)(0)(0)(0)(0)(103)(102)(101)
 										])),
 									A2(
 									$mdgriffith$elm_ui$Element$column,
@@ -18187,7 +18205,7 @@ var $author$project$MacCalciUI$view = function (model) {
 var $author$project$MacCalciUI$main = $elm$browser$Browser$sandbox(
 	{init: $author$project$MacCalciUI$init, update: $author$project$MacCalciUI$update, view: $author$project$MacCalciUI$view});
 _Platform_export({'MacCalciUI':{'init':$author$project$MacCalciUI$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"MacCalciUI.Msg","aliases":{},"unions":{"MacCalciUI.Msg":{"args":[],"tags":{"AddNumbers":[],"SubtractNumbers":[],"MultiplyNumbers":[],"DivideNumbers":[],"InsertDigit":["Basics.Int"],"AllClearTextField":[],"EqualsTo":[],"DecimalButtonPressed":[],"DoNothing":["String.String"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"MacCalciUI.Msg","aliases":{},"unions":{"MacCalciUI.Msg":{"args":[],"tags":{"AddNumbers":[],"SubtractNumbers":[],"MultiplyNumbers":[],"DivideNumbers":[],"DivideByHundred":[],"InsertDigit":["Basics.Int"],"AllClearTextField":[],"EqualsTo":[],"DecimalButtonPressed":[],"DoNothing":["String.String"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});
 
 //////////////////// HMR BEGIN ////////////////////
 
