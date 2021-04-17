@@ -1,4 +1,4 @@
-module MacCalciUI exposing (..)
+module Main exposing (Model, Msg(..), NumberType(..), Operation(..), appendPeriodToInt, init, main, removeDecimal, renderFloatToNumberType, renderNumberTypetoFloat, renderNumberTypetoString, update, view)
 
 import Browser
 import Debug exposing (toString)
