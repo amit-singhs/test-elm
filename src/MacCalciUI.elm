@@ -29,9 +29,14 @@ type Operation
     | Division
 
 
+type Sign
+    = Positive
+    | Negative
+
+
 type NumberType
-    = Integer Int
-    | Decimal Int Int
+    = Integer Int Sign
+    | Decimal Int Int Sign
 
 
 type alias Model =
@@ -46,11 +51,11 @@ type alias Model =
 
 init : Model
 init =
-    { firstNumber = Integer 0
-    , secondNumber = Integer 0
-    , displayedNumber = Integer 0
+    { firstNumber = Integer 0 Positive
+    , secondNumber = Integer 0 Positive
+    , displayedNumber = Integer 0 Positive
     , operationType = Nothing
-    , result = Integer 0
+    , result = Integer 0 Positive
     , decimalButtonIsOn = False
     }
 
@@ -79,35 +84,63 @@ removeDecimal floatNumber =
 renderNumberTypetoFloat : NumberType -> Float
 renderNumberTypetoFloat numType =
     case numType of
-        Integer i ->
-            toFloat i
+        Integer i sign ->
+            case sign of
+                Negative ->
+                    toFloat (negate i)
 
-        Decimal intNumber decimalPlaces ->
-            toFloat intNumber / toFloat (10 ^ decimalPlaces)
+                Positive ->
+                    toFloat i
+
+        Decimal intNumber decimalPlaces sign ->
+            case sign of
+                Negative ->
+                    toFloat (negate (intNumber / toFloat (10 ^ decimalPlaces)))
+
+                Positive ->
+                    toFloat intNumber / toFloat (10 ^ decimalPlaces)
 
 
 renderFloatToNumberType : Float -> NumberType
 renderFloatToNumberType floatNumber =
     if String.contains "." (String.fromFloat floatNumber) == False then
-        Integer (ceiling floatNumber)
+        if floatNumber < 0 then
+            Integer (ceiling floatNumber) Negative
+
+        else
+            Integer (ceiling floatNumber) Positive
 
     else
         case List.head (List.reverse (String.split "." (String.fromFloat floatNumber))) of
             Just decimalPart ->
-                Decimal (removeDecimal floatNumber) (String.length decimalPart)
+                if floatNumber < 0 then
+                    Decimal (removeDecimal floatNumber) (String.length decimalPart) Negative
+
+                else
+                    Decimal (removeDecimal floatNumber) (String.length decimalPart) Positive
 
             Nothing ->
-                Decimal 0 0
+                Decimal 0 0 Positive
 
 
 renderNumberTypetoString : NumberType -> String
 renderNumberTypetoString numType =
     case numType of
-        Integer i ->
-            String.fromInt i
+        Integer i sign ->
+            case sign of
+                Negative ->
+                    String.fromInt (negate i)
 
-        Decimal intNumber decimalPlace ->
-            String.fromFloat (toFloat intNumber / toFloat (10 ^ decimalPlace))
+                Positive ->
+                    String.fromInt i
+
+        Decimal intNumber decimalPlace sign ->
+            case sign of
+                Negative ->
+                    String.fromFloat (negate (toFloat intNumber / toFloat (10 ^ decimalPlace)))
+
+                Positive ->
+                    String.fromFloat (toFloat intNumber / toFloat (10 ^ decimalPlace))
 
 
 
@@ -150,12 +183,22 @@ update msg model =
                 insertAtOnes : NumberType -> Int -> NumberType
                 insertAtOnes x d =
                     case x of
-                        Integer v ->
-                            Integer ((v * 10) + d)
+                        Integer v sign ->
+                            case sign of
+                                Negative ->
+                                    Integer ((v * 10) + d) Negative
 
-                        Decimal v decimalPlace ->
+                                Positive ->
+                                    Integer ((v * 10) + d) Positive
+
+                        Decimal v decimalPlace sign ->
                             --Decimal (v + toFloat d / toFloat (10 ^ decimalPlace)) (decimalPlace + 1)
-                            Decimal ((v * 10) + d) (decimalPlace + 1)
+                            case sign of
+                                Negative ->
+                                    Decimal ((v * 10) + d) (decimalPlace + 1) Negative
+
+                                Positive ->
+                                    Decimal ((v * 10) + d) (decimalPlace + 1) Positive
             in
             case model.operationType of
                 Nothing ->
@@ -177,11 +220,21 @@ update msg model =
             { model
                 | displayedNumber =
                     case model.displayedNumber of
-                        Integer x ->
-                            renderFloatToNumberType (toFloat x / 100)
+                        Integer x sign ->
+                            case sign of
+                                Negative ->
+                                    renderFloatToNumberType (toFloat (negate x) / 100)
 
-                        Decimal x y ->
-                            renderFloatToNumberType (renderNumberTypetoFloat (Decimal x y) / 100)
+                                Positive ->
+                                    renderFloatToNumberType (toFloat x / 100)
+
+                        Decimal x y sign ->
+                            case sign of
+                                Negative ->
+                                    renderFloatToNumberType (renderNumberTypetoFloat (Decimal x y Negative) / 100)
+
+                                Positive ->
+                                    renderFloatToNumberType (renderNumberTypetoFloat (Decimal x y Positive) / 100)
             }
 
         EqualsTo ->
@@ -191,20 +244,42 @@ update msg model =
                         Just Addition ->
                             --m.firstNumber + m.secondNumber
                             case m.firstNumber of
-                                Integer a ->
-                                    case m.secondNumber of
-                                        Integer b ->
-                                            Integer (a + b)
+                                Integer a aSign ->
+                                    case aSign of
+                                        Negative ->
+                                            case m.secondNumber of
+                                                Integer b bSign ->
+                                                    case bSign of
+                                                        Negative ->
+                                                            Integer (negate a + negate b)
 
-                                        Decimal c d ->
-                                            renderFloatToNumberType (toFloat a + renderNumberTypetoFloat (Decimal c d))
+                                                        Positive ->
+                                                            Integer (negate a + b)
 
-                                Decimal e f ->
+                                        Positive ->
+                                            case m.secondNumber of
+                                                Integer b bSign ->
+                                                    case bSign of
+                                                        Negative ->
+                                                            Integer (a + negate b)
+
+                                                        Positive ->
+                                                            Integer (a + b)
+
+                                                Decimal c d cdSign ->
+                                                    case cdSign of
+                                                        Negative ->
+                                                            renderFloatToNumberType (toFloat a + renderNumberTypetoFloat (Decimal c d Negative))
+
+                                                        Positive ->
+                                                            renderFloatToNumberType (toFloat a + renderNumberTypetoFloat (Decimal c d Positive))
+
+                                Decimal e f efSign ->
                                     case m.secondNumber of
-                                        Integer g ->
+                                        Integer g gsign ->
                                             renderFloatToNumberType (renderNumberTypetoFloat (Decimal e f) + toFloat g)
 
-                                        Decimal h i ->
+                                        Decimal h i hiSign ->
                                             renderFloatToNumberType (renderNumberTypetoFloat (Decimal e f) + renderNumberTypetoFloat (Decimal h i))
 
                         --Integer 1
@@ -313,7 +388,7 @@ appendPeriodToInt integerToBeAppended =
 view : Model -> Html Msg
 view model =
     let
-        createButton buttonLabel buttonlength buttonEvent tL tR bL bR r g b =
+        createButton buttonLabel buttonlength buttonEvent tL tR bL bR backGroundRed backGroundGreen backGroundBlue onPressRed onPressBlue onPressGreen =
             Input.button
                 [ height (px 60)
                 , width (px buttonlength)
@@ -329,12 +404,12 @@ view model =
                 , Font.family
                     [ Font.typeface "Helvetica"
                     ]
-                , Background.color <| Element.rgb255 r g b
+                , Background.color <| Element.rgb255 backGroundRed backGroundGreen backGroundBlue
                 , Font.color <| Element.rgb255 228 228 228
                 , Font.medium
                 , Font.center
                 , mouseDown
-                    [ Background.color <| Element.rgb255 180 180 179
+                    [ Background.color <| Element.rgb255 onPressRed onPressBlue onPressGreen
                     , Border.color <| Element.rgb255 84 83 81
                     ]
                 ]
@@ -367,33 +442,33 @@ view model =
                         }
                     ]
                 , row []
-                    [ column [] [ createButton "AC" 70 AllClearTextField 0 0 0 0 103 102 101 ]
-                    , column [] [ createButton "+/-" 70 (DoNothing "") 0 0 0 0 103 102 101 ]
-                    , column [] [ createButton "%" 70 DivideByHundred 0 0 0 0 103 102 101 ]
-                    , column [] [ createButton "÷" 80 DivideNumbers 0 0 0 0 242 163 60 ]
+                    [ column [] [ createButton "AC" 70 AllClearTextField 0 0 0 0 103 102 101 126 126 125 ]
+                    , column [] [ createButton "+/-" 70 (DoNothing "") 0 0 0 0 103 102 101 126 126 125 ]
+                    , column [] [ createButton "%" 70 DivideByHundred 0 0 0 0 103 102 101 126 126 125 ]
+                    , column [] [ createButton "÷" 80 DivideNumbers 0 0 0 0 253 160 39 192 129 46 ]
                     ]
                 , row []
-                    [ column [] [ createButton "7" 70 (InsertDigit 7) 0 0 0 0 126 126 125 ]
-                    , column [] [ createButton "8" 70 (InsertDigit 8) 0 0 0 0 126 126 125 ]
-                    , column [] [ createButton "9" 70 (InsertDigit 9) 0 0 0 0 126 126 125 ]
-                    , column [] [ createButton "X" 80 MultiplyNumbers 0 0 0 0 242 163 60 ]
+                    [ column [] [ createButton "7" 70 (InsertDigit 7) 0 0 0 0 126 126 125 180 180 179 ]
+                    , column [] [ createButton "8" 70 (InsertDigit 8) 0 0 0 0 126 126 125 180 180 179 ]
+                    , column [] [ createButton "9" 70 (InsertDigit 9) 0 0 0 0 126 126 125 180 180 179 ]
+                    , column [] [ createButton "X" 80 MultiplyNumbers 0 0 0 0 253 160 39 192 129 46 ]
                     ]
                 , row []
-                    [ column [] [ createButton "4" 70 (InsertDigit 4) 0 0 0 0 126 126 125 ]
-                    , column [] [ createButton "5" 70 (InsertDigit 5) 0 0 0 0 126 126 125 ]
-                    , column [] [ createButton "6" 70 (InsertDigit 6) 0 0 0 0 126 126 125 ]
-                    , column [] [ createButton "—" 80 SubtractNumbers 0 0 0 0 242 163 60 ]
+                    [ column [] [ createButton "4" 70 (InsertDigit 4) 0 0 0 0 126 126 125 180 180 179 ]
+                    , column [] [ createButton "5" 70 (InsertDigit 5) 0 0 0 0 126 126 125 180 180 179 ]
+                    , column [] [ createButton "6" 70 (InsertDigit 6) 0 0 0 0 126 126 125 180 180 179 ]
+                    , column [] [ createButton "—" 80 SubtractNumbers 0 0 0 0 253 160 39 192 129 46 ]
                     ]
                 , row []
-                    [ column [] [ createButton "1" 70 (InsertDigit 1) 0 0 0 0 126 126 125 ]
-                    , column [] [ createButton "2" 70 (InsertDigit 2) 0 0 0 0 126 126 125 ]
-                    , column [] [ createButton "3" 70 (InsertDigit 3) 0 0 0 0 126 126 125 ]
-                    , column [] [ createButton "+" 80 AddNumbers 0 0 0 0 242 163 60 ]
+                    [ column [] [ createButton "1" 70 (InsertDigit 1) 0 0 0 0 126 126 125 180 180 179 ]
+                    , column [] [ createButton "2" 70 (InsertDigit 2) 0 0 0 0 126 126 125 180 180 179 ]
+                    , column [] [ createButton "3" 70 (InsertDigit 3) 0 0 0 0 126 126 125 180 180 179 ]
+                    , column [] [ createButton "+" 80 AddNumbers 0 0 0 0 253 160 39 192 129 46 ]
                     ]
                 , row []
-                    [ column [] [ createButton "0" 140 (InsertDigit 0) 0 0 12 0 126 126 125 ]
-                    , column [] [ createButton "." 70 DecimalButtonPressed 0 0 0 0 126 126 125 ]
-                    , column [] [ createButton "=" 80 EqualsTo 0 0 0 12 242 163 60 ]
+                    [ column [] [ createButton "0" 140 (InsertDigit 0) 0 0 12 0 126 126 125 180 180 179 ]
+                    , column [] [ createButton "." 70 DecimalButtonPressed 0 0 0 0 126 126 125 180 180 179 ]
+                    , column [] [ createButton "=" 80 EqualsTo 0 0 0 12 253 160 39 192 129 46 ]
                     ]
                 ]
             ]
