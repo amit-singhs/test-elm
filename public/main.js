@@ -10711,10 +10711,10 @@ var $elm$core$Basics$never = function (_v0) {
 	}
 };
 var $elm$browser$Browser$element = _Browser_element;
-var $author$project$CallExternalAPI$GotText = function (a) {
-	return {$: 'GotText', a: a};
-};
 var $author$project$CallExternalAPI$Loading = {$: 'Loading'};
+var $author$project$CallExternalAPI$GotGif = function (a) {
+	return {$: 'GotGif', a: a};
+};
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
 		return {$: 'BadStatus_', a: a, b: b};
@@ -10750,17 +10750,6 @@ var $elm$http$Http$expectStringResponse = F2(
 			$elm$core$Basics$identity,
 			A2($elm$core$Basics$composeR, toResult, toMsg));
 	});
-var $elm$http$Http$BadBody = function (a) {
-	return {$: 'BadBody', a: a};
-};
-var $elm$http$Http$BadStatus = function (a) {
-	return {$: 'BadStatus', a: a};
-};
-var $elm$http$Http$BadUrl = function (a) {
-	return {$: 'BadUrl', a: a};
-};
-var $elm$http$Http$NetworkError = {$: 'NetworkError'};
-var $elm$http$Http$Timeout = {$: 'Timeout'};
 var $elm$core$Result$mapError = F2(
 	function (f, result) {
 		if (result.$ === 'Ok') {
@@ -10772,6 +10761,17 @@ var $elm$core$Result$mapError = F2(
 				f(e));
 		}
 	});
+var $elm$http$Http$BadBody = function (a) {
+	return {$: 'BadBody', a: a};
+};
+var $elm$http$Http$BadStatus = function (a) {
+	return {$: 'BadStatus', a: a};
+};
+var $elm$http$Http$BadUrl = function (a) {
+	return {$: 'BadUrl', a: a};
+};
+var $elm$http$Http$NetworkError = {$: 'NetworkError'};
+var $elm$http$Http$Timeout = {$: 'Timeout'};
 var $elm$http$Http$resolve = F2(
 	function (toResult, response) {
 		switch (response.$) {
@@ -10795,12 +10795,19 @@ var $elm$http$Http$resolve = F2(
 					toResult(body));
 		}
 	});
-var $elm$http$Http$expectString = function (toMsg) {
-	return A2(
-		$elm$http$Http$expectStringResponse,
-		toMsg,
-		$elm$http$Http$resolve($elm$core$Result$Ok));
-};
+var $elm$http$Http$expectJson = F2(
+	function (toMsg, decoder) {
+		return A2(
+			$elm$http$Http$expectStringResponse,
+			toMsg,
+			$elm$http$Http$resolve(
+				function (string) {
+					return A2(
+						$elm$core$Result$mapError,
+						$elm$json$Json$Decode$errorToString,
+						A2($elm$json$Json$Decode$decodeString, decoder, string));
+				}));
+	});
 var $elm$http$Http$emptyBody = _Http_emptyBody;
 var $elm$http$Http$Request = function (a) {
 	return {$: 'Request', a: a};
@@ -10956,14 +10963,17 @@ var $elm$http$Http$get = function (r) {
 	return $elm$http$Http$request(
 		{body: $elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
 };
+var $author$project$CallExternalAPI$gifDecoder = A2(
+	$elm$json$Json$Decode$field,
+	'data',
+	A2($elm$json$Json$Decode$field, 'image_url', $elm$json$Json$Decode$string));
+var $author$project$CallExternalAPI$getRandomCatGif = $elm$http$Http$get(
+	{
+		expect: A2($elm$http$Http$expectJson, $author$project$CallExternalAPI$GotGif, $author$project$CallExternalAPI$gifDecoder),
+		url: 'https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=cat'
+	});
 var $author$project$CallExternalAPI$init = function (_v0) {
-	return _Utils_Tuple2(
-		$author$project$CallExternalAPI$Loading,
-		$elm$http$Http$get(
-			{
-				expect: $elm$http$Http$expectString($author$project$CallExternalAPI$GotText),
-				url: 'https://elm-lang.org/assets/public-opinion.txt'
-			}));
+	return _Utils_Tuple2($author$project$CallExternalAPI$Loading, $author$project$CallExternalAPI$getRandomCatGif);
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
@@ -10976,38 +10986,99 @@ var $author$project$CallExternalAPI$Success = function (a) {
 };
 var $author$project$CallExternalAPI$update = F2(
 	function (msg, model) {
-		var result = msg.a;
-		if (result.$ === 'Ok') {
-			var fullText = result.a;
-			return _Utils_Tuple2(
-				$author$project$CallExternalAPI$Success(fullText),
-				$elm$core$Platform$Cmd$none);
+		if (msg.$ === 'MorePlease') {
+			return _Utils_Tuple2($author$project$CallExternalAPI$Loading, $author$project$CallExternalAPI$getRandomCatGif);
 		} else {
-			return _Utils_Tuple2($author$project$CallExternalAPI$Failure, $elm$core$Platform$Cmd$none);
+			var result = msg.a;
+			if (result.$ === 'Ok') {
+				var url = result.a;
+				return _Utils_Tuple2(
+					$author$project$CallExternalAPI$Success(url),
+					$elm$core$Platform$Cmd$none);
+			} else {
+				return _Utils_Tuple2($author$project$CallExternalAPI$Failure, $elm$core$Platform$Cmd$none);
+			}
 		}
 	});
-var $elm$html$Html$pre = _VirtualDom_node('pre');
-var $author$project$CallExternalAPI$view = function (model) {
+var $elm$html$Html$h2 = _VirtualDom_node('h2');
+var $author$project$CallExternalAPI$MorePlease = {$: 'MorePlease'};
+var $elm$html$Html$img = _VirtualDom_node('img');
+var $elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
+var $author$project$CallExternalAPI$viewGif = function (model) {
 	switch (model.$) {
 		case 'Failure':
-			return $elm$html$Html$text('I was unable to load your book.');
-		case 'Loading':
-			return $elm$html$Html$text('Loading...');
-		default:
-			var fullText = model.a;
 			return A2(
-				$elm$html$Html$pre,
+				$elm$html$Html$div,
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text(fullText)
+						$elm$html$Html$text('I could not load a random cat for some reason. '),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$CallExternalAPI$MorePlease)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Try Again!')
+							]))
+					]));
+		case 'Loading':
+			return $elm$html$Html$text('Loading...');
+		default:
+			var url = model.a;
+			return A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$CallExternalAPI$MorePlease),
+								A2($elm$html$Html$Attributes$style, 'display', 'block')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('More Please!')
+							])),
+						A2(
+						$elm$html$Html$img,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$src(url)
+							]),
+						_List_Nil)
 					]));
 	}
+};
+var $author$project$CallExternalAPI$view = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h2,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Random Cats')
+					])),
+				$author$project$CallExternalAPI$viewGif(model)
+			]));
 };
 var $author$project$CallExternalAPI$main = $elm$browser$Browser$element(
 	{init: $author$project$CallExternalAPI$init, subscriptions: $author$project$CallExternalAPI$subscriptions, update: $author$project$CallExternalAPI$update, view: $author$project$CallExternalAPI$view});
 _Platform_export({'CallExternalAPI':{'init':$author$project$CallExternalAPI$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"CallExternalAPI.Msg","aliases":{},"unions":{"CallExternalAPI.Msg":{"args":[],"tags":{"GotText":["Result.Result Http.Error String.String"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"CallExternalAPI.Msg","aliases":{},"unions":{"CallExternalAPI.Msg":{"args":[],"tags":{"MorePlease":[],"GotGif":["Result.Result Http.Error String.String"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});
 
 //////////////////// HMR BEGIN ////////////////////
 
