@@ -10715,7 +10715,10 @@ var $author$project$CallExternalAPI$Loading = {$: 'Loading'};
 var $author$project$CallExternalAPI$GotCryptoList = function (a) {
 	return {$: 'GotCryptoList', a: a};
 };
-var $author$project$CallExternalAPI$cryptoNameDecoder = A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string);
+var $author$project$CallExternalAPI$cryptoNameDecoder = A2(
+	$elm$json$Json$Decode$field,
+	'description',
+	A2($elm$json$Json$Decode$field, 'en', $elm$json$Json$Decode$string));
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
 		return {$: 'BadStatus_', a: a, b: b};
@@ -10967,7 +10970,7 @@ var $elm$http$Http$get = function (r) {
 var $author$project$CallExternalAPI$getCryptoSymbolsList = $elm$http$Http$get(
 	{
 		expect: A2($elm$http$Http$expectJson, $author$project$CallExternalAPI$GotCryptoList, $author$project$CallExternalAPI$cryptoNameDecoder),
-		url: 'https://api.coingecko.com/api/v3/coins/list'
+		url: 'https://api.coingecko.com/api/v3/coins/bitcoin'
 	});
 var $author$project$CallExternalAPI$init = function (_v0) {
 	return _Utils_Tuple2($author$project$CallExternalAPI$Loading, $author$project$CallExternalAPI$getCryptoSymbolsList);
@@ -10988,9 +10991,9 @@ var $author$project$CallExternalAPI$update = F2(
 		} else {
 			var result = msg.a;
 			if (result.$ === 'Ok') {
-				var url = result.a;
+				var textValue = result.a;
 				return _Utils_Tuple2(
-					$author$project$CallExternalAPI$Success(url),
+					$author$project$CallExternalAPI$Success(textValue),
 					$elm$core$Platform$Cmd$none);
 			} else {
 				return _Utils_Tuple2($author$project$CallExternalAPI$Failure, $elm$core$Platform$Cmd$none);
@@ -10999,14 +11002,7 @@ var $author$project$CallExternalAPI$update = F2(
 	});
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $author$project$CallExternalAPI$MorePlease = {$: 'MorePlease'};
-var $elm$html$Html$img = _VirtualDom_node('img');
-var $elm$html$Html$Attributes$src = function (url) {
-	return A2(
-		$elm$html$Html$Attributes$stringProperty,
-		'src',
-		_VirtualDom_noJavaScriptOrHtmlUri(url));
-};
-var $author$project$CallExternalAPI$viewGif = function (model) {
+var $author$project$CallExternalAPI$renderModels = function (model) {
 	switch (model.$) {
 		case 'Failure':
 			return A2(
@@ -11014,7 +11010,7 @@ var $author$project$CallExternalAPI$viewGif = function (model) {
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text('The crypto symbols list cannot be fetched due to some reason. '),
+						$elm$html$Html$text('Error encountered : '),
 						A2(
 						$elm$html$Html$button,
 						_List_fromArray(
@@ -11029,30 +11025,19 @@ var $author$project$CallExternalAPI$viewGif = function (model) {
 		case 'Loading':
 			return $elm$html$Html$text('Loading...');
 		default:
-			var url = model.a;
+			var textValue = model.a;
 			return A2(
 				$elm$html$Html$div,
 				_List_Nil,
 				_List_fromArray(
 					[
 						A2(
-						$elm$html$Html$button,
+						$elm$html$Html$div,
+						_List_Nil,
 						_List_fromArray(
 							[
-								$elm$html$Html$Events$onClick($author$project$CallExternalAPI$MorePlease),
-								A2($elm$html$Html$Attributes$style, 'display', 'block')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('More Please!')
-							])),
-						A2(
-						$elm$html$Html$img,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$src(url)
-							]),
-						_List_Nil)
+								$elm$html$Html$text(textValue)
+							]))
 					]));
 	}
 };
@@ -11067,9 +11052,9 @@ var $author$project$CallExternalAPI$view = function (model) {
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Crypto symbols')
+						$elm$html$Html$text('Bitcoin Introduction ')
 					])),
-				$author$project$CallExternalAPI$viewGif(model)
+				$author$project$CallExternalAPI$renderModels(model)
 			]));
 };
 var $author$project$CallExternalAPI$main = $elm$browser$Browser$element(

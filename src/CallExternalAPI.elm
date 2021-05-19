@@ -53,8 +53,8 @@ update msg model =
 
         GotCryptoList result ->
             case result of
-                Ok url ->
-                    ( Success url, Cmd.none )
+                Ok textValue ->
+                    ( Success textValue, Cmd.none )
 
                 Err _ ->
                     ( Failure, Cmd.none )
@@ -76,27 +76,26 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div []
-        [ h2 [] [ text "Crypto symbols" ]
-        , viewSymbol model
+        [ h2 [] [ text "Bitcoin Introduction " ]
+        , renderModels model
         ]
 
 
-viewSymbol : Model -> Html Msg
-viewSymbol model =
+renderModels : Model -> Html Msg
+renderModels model =
     case model of
         Failure ->
             div []
-                [ text "The crypto symbols list cannot be fetched due to some reason. "
+                [ text "Error encountered : "
                 , button [ onClick MorePlease ] [ text "Try Again!" ]
                 ]
 
         Loading ->
             text "Loading..."
 
-        Success url ->
+        Success textValue ->
             div []
-                [ button [ onClick MorePlease, style "display" "block" ] [ text "More Please!" ]
-                , img [ src url ] []
+                [ div [] [ text textValue ]
                 ]
 
 
@@ -107,11 +106,11 @@ viewSymbol model =
 getCryptoSymbolsList : Cmd Msg
 getCryptoSymbolsList =
     Http.get
-        { url = "https://api.coingecko.com/api/v3/coins/list"
+        { url = "https://api.coingecko.com/api/v3/coins/bitcoin"
         , expect = Http.expectJson GotCryptoList cryptoNameDecoder
         }
 
 
 cryptoNameDecoder : Decoder String
 cryptoNameDecoder =
-    field "name" string
+    field "description" (field "en" string)
