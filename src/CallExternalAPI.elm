@@ -33,7 +33,7 @@ type Model
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Loading, getRandomCatGif )
+    ( Loading, getCryptoSymbolsList )
 
 
 
@@ -42,16 +42,16 @@ init _ =
 
 type Msg
     = MorePlease
-    | GotGif (Result Http.Error String)
+    | GotCryptoList (Result Http.Error String)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         MorePlease ->
-            ( Loading, getRandomCatGif )
+            ( Loading, getCryptoSymbolsList )
 
-        GotGif result ->
+        GotCryptoList result ->
             case result of
                 Ok url ->
                     ( Success url, Cmd.none )
@@ -76,17 +76,17 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div []
-        [ h2 [] [ text "Random Cats" ]
-        , viewGif model
+        [ h2 [] [ text "Crypto symbols" ]
+        , viewSymbol model
         ]
 
 
-viewGif : Model -> Html Msg
-viewGif model =
+viewSymbol : Model -> Html Msg
+viewSymbol model =
     case model of
         Failure ->
             div []
-                [ text "I could not load a random cat for some reason. "
+                [ text "The crypto symbols list cannot be fetched due to some reason. "
                 , button [ onClick MorePlease ] [ text "Try Again!" ]
                 ]
 
@@ -104,14 +104,14 @@ viewGif model =
 -- HTTP
 
 
-getRandomCatGif : Cmd Msg
-getRandomCatGif =
+getCryptoSymbolsList : Cmd Msg
+getCryptoSymbolsList =
     Http.get
-        { url = "https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=cat"
-        , expect = Http.expectJson GotGif gifDecoder
+        { url = "https://api.coingecko.com/api/v3/coins/list"
+        , expect = Http.expectJson GotCryptoList cryptoNameDecoder
         }
 
 
-gifDecoder : Decoder String
-gifDecoder =
-    field "data" (field "image_url" string)
+cryptoNameDecoder : Decoder String
+cryptoNameDecoder =
+    field "name" string

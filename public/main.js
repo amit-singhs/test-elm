@@ -10712,9 +10712,10 @@ var $elm$core$Basics$never = function (_v0) {
 };
 var $elm$browser$Browser$element = _Browser_element;
 var $author$project$CallExternalAPI$Loading = {$: 'Loading'};
-var $author$project$CallExternalAPI$GotGif = function (a) {
-	return {$: 'GotGif', a: a};
+var $author$project$CallExternalAPI$GotCryptoList = function (a) {
+	return {$: 'GotCryptoList', a: a};
 };
+var $author$project$CallExternalAPI$cryptoNameDecoder = A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string);
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
 		return {$: 'BadStatus_', a: a, b: b};
@@ -10963,17 +10964,13 @@ var $elm$http$Http$get = function (r) {
 	return $elm$http$Http$request(
 		{body: $elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
 };
-var $author$project$CallExternalAPI$gifDecoder = A2(
-	$elm$json$Json$Decode$field,
-	'data',
-	A2($elm$json$Json$Decode$field, 'image_url', $elm$json$Json$Decode$string));
-var $author$project$CallExternalAPI$getRandomCatGif = $elm$http$Http$get(
+var $author$project$CallExternalAPI$getCryptoSymbolsList = $elm$http$Http$get(
 	{
-		expect: A2($elm$http$Http$expectJson, $author$project$CallExternalAPI$GotGif, $author$project$CallExternalAPI$gifDecoder),
-		url: 'https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=cat'
+		expect: A2($elm$http$Http$expectJson, $author$project$CallExternalAPI$GotCryptoList, $author$project$CallExternalAPI$cryptoNameDecoder),
+		url: 'https://api.coingecko.com/api/v3/coins/list'
 	});
 var $author$project$CallExternalAPI$init = function (_v0) {
-	return _Utils_Tuple2($author$project$CallExternalAPI$Loading, $author$project$CallExternalAPI$getRandomCatGif);
+	return _Utils_Tuple2($author$project$CallExternalAPI$Loading, $author$project$CallExternalAPI$getCryptoSymbolsList);
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
@@ -10987,7 +10984,7 @@ var $author$project$CallExternalAPI$Success = function (a) {
 var $author$project$CallExternalAPI$update = F2(
 	function (msg, model) {
 		if (msg.$ === 'MorePlease') {
-			return _Utils_Tuple2($author$project$CallExternalAPI$Loading, $author$project$CallExternalAPI$getRandomCatGif);
+			return _Utils_Tuple2($author$project$CallExternalAPI$Loading, $author$project$CallExternalAPI$getCryptoSymbolsList);
 		} else {
 			var result = msg.a;
 			if (result.$ === 'Ok') {
@@ -11017,7 +11014,7 @@ var $author$project$CallExternalAPI$viewGif = function (model) {
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text('I could not load a random cat for some reason. '),
+						$elm$html$Html$text('The crypto symbols list cannot be fetched due to some reason. '),
 						A2(
 						$elm$html$Html$button,
 						_List_fromArray(
@@ -11070,7 +11067,7 @@ var $author$project$CallExternalAPI$view = function (model) {
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Random Cats')
+						$elm$html$Html$text('Crypto symbols')
 					])),
 				$author$project$CallExternalAPI$viewGif(model)
 			]));
@@ -11078,7 +11075,7 @@ var $author$project$CallExternalAPI$view = function (model) {
 var $author$project$CallExternalAPI$main = $elm$browser$Browser$element(
 	{init: $author$project$CallExternalAPI$init, subscriptions: $author$project$CallExternalAPI$subscriptions, update: $author$project$CallExternalAPI$update, view: $author$project$CallExternalAPI$view});
 _Platform_export({'CallExternalAPI':{'init':$author$project$CallExternalAPI$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"CallExternalAPI.Msg","aliases":{},"unions":{"CallExternalAPI.Msg":{"args":[],"tags":{"MorePlease":[],"GotGif":["Result.Result Http.Error String.String"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"CallExternalAPI.Msg","aliases":{},"unions":{"CallExternalAPI.Msg":{"args":[],"tags":{"MorePlease":[],"GotCryptoList":["Result.Result Http.Error String.String"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});
 
 //////////////////// HMR BEGIN ////////////////////
 
