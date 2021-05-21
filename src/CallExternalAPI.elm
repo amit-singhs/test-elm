@@ -36,6 +36,13 @@ init _ =
     ( Loading, getCryptoSymbolsList )
 
 
+type alias CryptoInstrument =
+    { symbol : String
+    , name : String
+    , currentPrice : Int
+    }
+
+
 
 -- UPDATE
 
@@ -106,11 +113,11 @@ renderModels model =
 getCryptoSymbolsList : Cmd Msg
 getCryptoSymbolsList =
     Http.get
-        { url = "https://api.coingecko.com/api/v3/coins/bitcoin"
+        { url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd"
         , expect = Http.expectJson GotCryptoList cryptoNameDecoder
         }
 
 
 cryptoNameDecoder : Decoder String
 cryptoNameDecoder =
-    field "description" (field "en" string)
+    field "id" string

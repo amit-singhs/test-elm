@@ -10715,10 +10715,7 @@ var $author$project$CallExternalAPI$Loading = {$: 'Loading'};
 var $author$project$CallExternalAPI$GotCryptoList = function (a) {
 	return {$: 'GotCryptoList', a: a};
 };
-var $author$project$CallExternalAPI$cryptoNameDecoder = A2(
-	$elm$json$Json$Decode$field,
-	'description',
-	A2($elm$json$Json$Decode$field, 'en', $elm$json$Json$Decode$string));
+var $author$project$CallExternalAPI$cryptoNameDecoder = A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$string);
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
 		return {$: 'BadStatus_', a: a, b: b};
@@ -10970,7 +10967,7 @@ var $elm$http$Http$get = function (r) {
 var $author$project$CallExternalAPI$getCryptoSymbolsList = $elm$http$Http$get(
 	{
 		expect: A2($elm$http$Http$expectJson, $author$project$CallExternalAPI$GotCryptoList, $author$project$CallExternalAPI$cryptoNameDecoder),
-		url: 'https://api.coingecko.com/api/v3/coins/bitcoin'
+		url: 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd'
 	});
 var $author$project$CallExternalAPI$init = function (_v0) {
 	return _Utils_Tuple2($author$project$CallExternalAPI$Loading, $author$project$CallExternalAPI$getCryptoSymbolsList);
