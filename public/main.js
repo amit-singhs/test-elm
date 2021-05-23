@@ -10715,7 +10715,16 @@ var $author$project$CallExternalAPI$Loading = {$: 'Loading'};
 var $author$project$CallExternalAPI$GotCryptoList = function (a) {
 	return {$: 'GotCryptoList', a: a};
 };
-var $author$project$CallExternalAPI$cryptoNameDecoder = A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$string);
+var $author$project$CallExternalAPI$CryptoInstrument = F3(
+	function (symbol, name, currentPrice) {
+		return {currentPrice: currentPrice, name: name, symbol: symbol};
+	});
+var $author$project$CallExternalAPI$cryptoInstrumentDecoder = A4(
+	$elm$json$Json$Decode$map3,
+	$author$project$CallExternalAPI$CryptoInstrument,
+	A2($elm$json$Json$Decode$field, 'symbol', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'current_price', $elm$json$Json$Decode$float));
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
 		return {$: 'BadStatus_', a: a, b: b};
@@ -10966,7 +10975,10 @@ var $elm$http$Http$get = function (r) {
 };
 var $author$project$CallExternalAPI$getCryptoSymbolsList = $elm$http$Http$get(
 	{
-		expect: A2($elm$http$Http$expectJson, $author$project$CallExternalAPI$GotCryptoList, $author$project$CallExternalAPI$cryptoNameDecoder),
+		expect: A2(
+			$elm$http$Http$expectJson,
+			$author$project$CallExternalAPI$GotCryptoList,
+			$elm$json$Json$Decode$list($author$project$CallExternalAPI$cryptoInstrumentDecoder)),
 		url: 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd'
 	});
 var $author$project$CallExternalAPI$init = function (_v0) {
@@ -10999,6 +11011,90 @@ var $author$project$CallExternalAPI$update = F2(
 	});
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $author$project$CallExternalAPI$MorePlease = {$: 'MorePlease'};
+var $elm$html$Html$h3 = _VirtualDom_node('h3');
+var $elm$html$Html$table = _VirtualDom_node('table');
+var $elm$html$Html$td = _VirtualDom_node('td');
+var $elm$html$Html$tr = _VirtualDom_node('tr');
+var $author$project$CallExternalAPI$viewCrypto = function (cryptoInstrument) {
+	return A2(
+		$elm$html$Html$tr,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$td,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(cryptoInstrument.symbol)
+					])),
+				A2(
+				$elm$html$Html$td,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(cryptoInstrument.name)
+					])),
+				A2(
+				$elm$html$Html$td,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						'$ ' + $elm$core$String$fromFloat(cryptoInstrument.currentPrice))
+					]))
+			]));
+};
+var $elm$html$Html$th = _VirtualDom_node('th');
+var $author$project$CallExternalAPI$viewTableHeader = A2(
+	$elm$html$Html$tr,
+	_List_Nil,
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$th,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Symbol')
+				])),
+			A2(
+			$elm$html$Html$th,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Name')
+				])),
+			A2(
+			$elm$html$Html$th,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Current Price')
+				]))
+		]));
+var $author$project$CallExternalAPI$viewCryptos = function (cryptoInstruments) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h3,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Cryptos')
+					])),
+				A2(
+				$elm$html$Html$table,
+				_List_Nil,
+				_Utils_ap(
+					_List_fromArray(
+						[$author$project$CallExternalAPI$viewTableHeader]),
+					A2($elm$core$List$map, $author$project$CallExternalAPI$viewCrypto, cryptoInstruments)))
+			]));
+};
 var $author$project$CallExternalAPI$renderModels = function (model) {
 	switch (model.$) {
 		case 'Failure':
@@ -11022,19 +11118,13 @@ var $author$project$CallExternalAPI$renderModels = function (model) {
 		case 'Loading':
 			return $elm$html$Html$text('Loading...');
 		default:
-			var textValue = model.a;
+			var cryptosList = model.a;
 			return A2(
 				$elm$html$Html$div,
 				_List_Nil,
 				_List_fromArray(
 					[
-						A2(
-						$elm$html$Html$div,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text(textValue)
-							]))
+						$author$project$CallExternalAPI$viewCryptos(cryptosList)
 					]));
 	}
 };
@@ -11049,7 +11139,7 @@ var $author$project$CallExternalAPI$view = function (model) {
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Bitcoin Introduction ')
+						$elm$html$Html$text('Crypto instrument list. ')
 					])),
 				$author$project$CallExternalAPI$renderModels(model)
 			]));
@@ -11057,7 +11147,7 @@ var $author$project$CallExternalAPI$view = function (model) {
 var $author$project$CallExternalAPI$main = $elm$browser$Browser$element(
 	{init: $author$project$CallExternalAPI$init, subscriptions: $author$project$CallExternalAPI$subscriptions, update: $author$project$CallExternalAPI$update, view: $author$project$CallExternalAPI$view});
 _Platform_export({'CallExternalAPI':{'init':$author$project$CallExternalAPI$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"CallExternalAPI.Msg","aliases":{},"unions":{"CallExternalAPI.Msg":{"args":[],"tags":{"MorePlease":[],"GotCryptoList":["Result.Result Http.Error String.String"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"CallExternalAPI.Msg","aliases":{"CallExternalAPI.CryptoInstrument":{"args":[],"type":"{ symbol : String.String, name : String.String, currentPrice : Basics.Float }"}},"unions":{"CallExternalAPI.Msg":{"args":[],"tags":{"MorePlease":[],"GotCryptoList":["Result.Result Http.Error (List.List CallExternalAPI.CryptoInstrument)"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"List.List":{"args":["a"],"tags":{}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});
 
 //////////////////// HMR BEGIN ////////////////////
 

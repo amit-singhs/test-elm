@@ -5,7 +5,8 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
-import Json.Decode exposing (Decoder, field, string)
+import Json.Decode as Decode exposing (Decoder, decodeString, field, float, int, list, map3, string)
+import Json.Encode exposing (float)
 
 
 
@@ -28,7 +29,7 @@ main =
 type Model
     = Failure
     | Loading
-    | Success String
+    | Success (List CryptoInstrument)
 
 
 init : () -> ( Model, Cmd Msg )
@@ -39,7 +40,7 @@ init _ =
 type alias CryptoInstrument =
     { symbol : String
     , name : String
-    , currentPrice : Int
+    , currentPrice : Float
     }
 
 
@@ -49,7 +50,7 @@ type alias CryptoInstrument =
 
 type Msg
     = MorePlease
-    | GotCryptoList (Result Http.Error String)
+    | GotCryptoList (Result Http.Error (List CryptoInstrument))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -83,7 +84,7 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div []
-        [ h2 [] [ text "Bitcoin Introduction " ]
+        [ h2 [] [ text "Crypto instrument list. " ]
         , renderModels model
         ]
 
@@ -100,10 +101,42 @@ renderModels model =
         Loading ->
             text "Loading..."
 
-        Success textValue ->
+        Success cryptosList ->
             div []
-                [ div [] [ text textValue ]
-                ]
+                [ viewCryptos cryptosList ]
+
+
+viewCryptos : List CryptoInstrument -> Html Msg
+viewCryptos cryptoInstruments =
+    div []
+        [ h3 [] [ text "Cryptos" ]
+        , table []
+            ([ viewTableHeader ] ++ List.map viewCrypto cryptoInstruments)
+        ]
+
+
+viewTableHeader : Html Msg
+viewTableHeader =
+    tr []
+        [ th []
+            [ text "Symbol" ]
+        , th []
+            [ text "Name" ]
+        , th []
+            [ text "Current Price" ]
+        ]
+
+
+viewCrypto : CryptoInstrument -> Html Msg
+viewCrypto cryptoInstrument =
+    tr []
+        [ td []
+            [ text cryptoInstrument.symbol ]
+        , td []
+            [ text cryptoInstrument.name ]
+        , td []
+            [ text ("$ " ++ String.fromFloat cryptoInstrument.currentPrice) ]
+        ]
 
 
 
@@ -114,10 +147,13 @@ getCryptoSymbolsList : Cmd Msg
 getCryptoSymbolsList =
     Http.get
         { url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd"
-        , expect = Http.expectJson GotCryptoList cryptoNameDecoder
+        , expect = Http.expectJson GotCryptoList (Decode.list cryptoInstrumentDecoder)
         }
 
 
-cryptoNameDecoder : Decoder String
-cryptoNameDecoder =
-    field "id" string
+cryptoInstrumentDecoder : Decoder CryptoInstrument
+cryptoInstrumentDecoder =
+    map3 CryptoInstrument
+        (field "symbol" string)
+        (field "name" string)
+        (field "current_price" Decode.float)
