@@ -33,8 +33,17 @@ main =
 -- MODEL
 
 
-type Model
-    = Loading
+type alias Model =
+    { displayedNumber : NumberType
+    , inputNumber : NumberType
+    , numbersList : List NumberType
+    , total : NumberType
+    }
+
+
+type NumberType
+    = Integer Int
+    | Decimal Int Int
 
 
 
@@ -44,21 +53,137 @@ type Model
 type Msg
     = SayHello
     | DoNothing String
+    | InsertDigit Int
+    | DecimalButtonPressed
+    | AddButtonPressed
+
+
+removeDecimal floatNumber =
+    if (floatNumber - toFloat (floor floatNumber)) /= 0 then
+        removeDecimal (10 * floatNumber)
+
+    else
+        round floatNumber
+
+
+renderNumberTypetoFloat : NumberType -> Float
+renderNumberTypetoFloat numType =
+    case numType of
+        Integer i ->
+            toFloat i
+
+        Decimal intNumber decimalPlaces ->
+            toFloat intNumber / toFloat (10 ^ decimalPlaces)
+
+
+renderFloatToNumberType : Float -> NumberType
+renderFloatToNumberType floatNumber =
+    if String.contains "." (String.fromFloat floatNumber) == False then
+        Integer (ceiling floatNumber)
+
+    else
+        case List.head (List.reverse (String.split "." (String.fromFloat floatNumber))) of
+            Just decimalPart ->
+                Decimal (removeDecimal floatNumber) (String.length decimalPart)
+
+            Nothing ->
+                Decimal 0 0
+
+
+renderNumberTypetoString : NumberType -> String
+renderNumberTypetoString numType =
+    case numType of
+        Integer i ->
+            String.fromInt i
+
+        Decimal intNumber decimalPlace ->
+            String.fromFloat (toFloat intNumber / toFloat (10 ^ decimalPlace))
+
+
+addTwoNumberTypes : NumberType -> NumberType -> NumberType
+addTwoNumberTypes numType1 numType2 =
+    case numType1 of
+        Integer i ->
+            case numType2 of
+                Integer j ->
+                    Integer (i + j)
+
+                Decimal _ _ ->
+                    renderFloatToNumberType (toFloat i + renderNumberTypetoFloat numType2)
+
+        Decimal _ _ ->
+            case numType2 of
+                Integer i ->
+                    renderFloatToNumberType (toFloat i + renderNumberTypetoFloat numType1)
+
+                Decimal _ _ ->
+                    renderFloatToNumberType (renderNumberTypetoFloat numType1 + renderNumberTypetoFloat numType2)
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Loading, Cmd.none )
+    ( { displayedNumber = Integer 0
+      , inputNumber = Integer 0
+      , numbersList = [ Integer 0 ]
+      , total = Integer 0
+      }
+    , Cmd.none
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SayHello ->
-            ( Loading, Cmd.none )
+            ( { model | displayedNumber = model.inputNumber }
+            , Cmd.none
+            )
 
         DoNothing inputString ->
-            ( Loading, Cmd.none )
+            ( { model | displayedNumber = model.inputNumber }
+            , Cmd.none
+            )
+
+        InsertDigit digit ->
+            let
+                insertAtOnes : NumberType -> Int -> NumberType
+                insertAtOnes x d =
+                    case x of
+                        Integer v ->
+                            Integer ((v * 10) + d)
+
+                        Decimal v decimalPlace ->
+                            --Decimal (v + toFloat d / toFloat (10 ^ decimalPlace)) (decimalPlace + 1)
+                            Decimal ((v * 10) + d) (decimalPlace + 1)
+            in
+            ( { model
+                | displayedNumber = insertAtOnes model.displayedNumber digit
+                , inputNumber = insertAtOnes model.displayedNumber digit
+              }
+            , Cmd.none
+            )
+
+        DecimalButtonPressed ->
+            let
+                convertToDecimal num =
+                    case num of
+                        Integer u ->
+                            Decimal u 0
+
+                        Decimal _ _ ->
+                            num
+            in
+            ( { model
+                | displayedNumber = convertToDecimal model.displayedNumber
+                , inputNumber = convertToDecimal model.inputNumber
+              }
+            , Cmd.none
+            )
+
+        AddButtonPressed ->
+            ( { model | total = addTwoNumberTypes model.total model.inputNumber }
+            , Cmd.none
+            )
 
 
 
@@ -121,34 +246,34 @@ view model =
                         , Font.alignRight
                         , Font.color <| Element.rgb255 0 0 0
                         ]
-                        { label = Input.labelHidden "text box"
+                        { label = Input.labelHidden "input text box"
                         , onChange = DoNothing
                         , placeholder = Nothing
-                        , text = "0"
+                        , text = renderNumberTypetoString model.displayedNumber
                         }
                     ]
                 , row []
-                    [ column [] [ createButton "1" 165 (DoNothing "") 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "2" 165 (DoNothing "") 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "3" 165 (DoNothing "") 0 0 0 0 106 166 119 ]
+                    [ column [] [ createButton "1" 165 (InsertDigit 1) 0 0 0 0 106 166 119 ]
+                    , column [] [ createButton "2" 165 (InsertDigit 2) 0 0 0 0 106 166 119 ]
+                    , column [] [ createButton "3" 165 (InsertDigit 3) 0 0 0 0 106 166 119 ]
                     ]
                 , row []
-                    [ column [] [ createButton "4" 165 (DoNothing "") 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "5" 165 (DoNothing "") 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "6" 165 (DoNothing "") 0 0 0 0 106 166 119 ]
+                    [ column [] [ createButton "4" 165 (InsertDigit 4) 0 0 0 0 106 166 119 ]
+                    , column [] [ createButton "5" 165 (InsertDigit 5) 0 0 0 0 106 166 119 ]
+                    , column [] [ createButton "6" 165 (InsertDigit 6) 0 0 0 0 106 166 119 ]
                     ]
                 , row []
-                    [ column [] [ createButton "7" 165 (DoNothing "") 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "8" 165 (DoNothing "") 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "9" 165 (DoNothing "") 0 0 0 0 106 166 119 ]
+                    [ column [] [ createButton "7" 165 (InsertDigit 7) 0 0 0 0 106 166 119 ]
+                    , column [] [ createButton "8" 165 (InsertDigit 8) 0 0 0 0 106 166 119 ]
+                    , column [] [ createButton "9" 165 (InsertDigit 9) 0 0 0 0 106 166 119 ]
                     ]
                 , row []
-                    [ column [] [ createButton "." 165 (DoNothing "") 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "0" 165 (DoNothing "") 0 0 0 0 106 166 119 ]
+                    [ column [] [ createButton "." 165 DecimalButtonPressed 0 0 0 0 106 166 119 ]
+                    , column [] [ createButton "0" 165 (InsertDigit 0) 0 0 0 0 106 166 119 ]
                     , column [] [ createButton "Add" 165 (DoNothing "") 0 0 0 0 106 166 119 ]
                     ]
                 , row []
-                    [ column [] [ createButton "Pay" 495 (DoNothing "") 0 0 0 0 106 166 119 ]
+                    [ column [] [ createButton ("Pay: $ " ++ renderNumberTypetoString model.total) 495 (DoNothing "") 0 0 0 0 106 166 119 ]
                     ]
                 ]
             , column [ padding 10 ] []
@@ -176,5 +301,6 @@ view model =
                         , text = "0"
                         }
                     ]
+                , row [ padding 20 ] [ Element.text ("Total : $ " ++ renderNumberTypetoString model.total) ]
                 ]
             ]

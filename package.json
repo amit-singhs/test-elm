@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "elm make src/CallExternalAPI.elm",
-    "start": "npx elm-live src/CallExternalAPI.elm --hot --start-page=public/index.html -- --debug --output=public/main.js"
+    "build": "elm make src/PortsPos.elm",
+    "start": "npx elm-live src/PortsPos.elm --hot --start-page=public/index.html -- --debug --output=public/main.js"
   },
   "repository": {
     "type": "git",
