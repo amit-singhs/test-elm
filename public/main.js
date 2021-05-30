@@ -10542,12 +10542,11 @@ var $author$project$PortsPos$Integer = function (a) {
 var $author$project$PortsPos$init = function (_v0) {
 	return _Utils_Tuple2(
 		{
+			decimalButtonIsOn: false,
 			displayedNumber: $author$project$PortsPos$Integer(0),
 			inputNumber: $author$project$PortsPos$Integer(0),
-			numbersList: _List_fromArray(
-				[
-					$author$project$PortsPos$Integer(0)
-				]),
+			numbersList: _List_Nil,
+			operationType: $elm$core$Maybe$Nothing,
 			total: $author$project$PortsPos$Integer(0)
 		},
 		$elm$core$Platform$Cmd$none);
@@ -10561,6 +10560,7 @@ var $author$project$PortsPos$Decimal = F2(
 	function (a, b) {
 		return {$: 'Decimal', a: a, b: b};
 	});
+var $author$project$PortsPos$PressingAddButton = {$: 'PressingAddButton'};
 var $elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -10670,14 +10670,26 @@ var $author$project$PortsPos$update = F2(
 							return A2($author$project$PortsPos$Decimal, (v * 10) + d, decimalPlace + 1);
 						}
 					});
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							displayedNumber: A2(insertAtOnes, model.displayedNumber, digit),
-							inputNumber: A2(insertAtOnes, model.displayedNumber, digit)
-						}),
-					$elm$core$Platform$Cmd$none);
+				var _v1 = model.operationType;
+				if (_v1.$ === 'Nothing') {
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								displayedNumber: A2(insertAtOnes, model.displayedNumber, digit),
+								inputNumber: A2(insertAtOnes, model.displayedNumber, digit)
+							}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								displayedNumber: A2(insertAtOnes, model.inputNumber, digit),
+								inputNumber: A2(insertAtOnes, model.inputNumber, digit)
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
 			case 'DecimalButtonPressed':
 				var convertToDecimal = function (num) {
 					if (num.$ === 'Integer') {
@@ -10700,11 +10712,17 @@ var $author$project$PortsPos$update = F2(
 					_Utils_update(
 						model,
 						{
+							decimalButtonIsOn: false,
+							displayedNumber: model.inputNumber,
+							inputNumber: $author$project$PortsPos$Integer(0),
+							numbersList: A2($elm$core$List$cons, model.inputNumber, model.numbersList),
+							operationType: $elm$core$Maybe$Just($author$project$PortsPos$PressingAddButton),
 							total: A2($author$project$PortsPos$addTwoNumberTypes, model.total, model.inputNumber)
 						}),
 					$elm$core$Platform$Cmd$none);
 		}
 	});
+var $author$project$PortsPos$AddButtonPressed = {$: 'AddButtonPressed'};
 var $author$project$PortsPos$DecimalButtonPressed = {$: 'DecimalButtonPressed'};
 var $author$project$PortsPos$DoNothing = function (a) {
 	return {$: 'DoNothing', a: a};
@@ -16746,25 +16764,6 @@ var $author$project$PortsPos$renderNumberTypetoString = function (numType) {
 			intNumber / A2($elm$core$Basics$pow, 10, decimalPlace));
 	}
 };
-var $mdgriffith$elm_ui$Element$rgb255 = F3(
-	function (red, green, blue) {
-		return A4($mdgriffith$elm_ui$Internal$Model$Rgba, red / 255, green / 255, blue / 255, 1);
-	});
-var $mdgriffith$elm_ui$Internal$Flag$borderRound = $mdgriffith$elm_ui$Internal$Flag$flag(17);
-var $mdgriffith$elm_ui$Element$Border$roundEach = function (_v0) {
-	var topLeft = _v0.topLeft;
-	var topRight = _v0.topRight;
-	var bottomLeft = _v0.bottomLeft;
-	var bottomRight = _v0.bottomRight;
-	return A2(
-		$mdgriffith$elm_ui$Internal$Model$StyleClass,
-		$mdgriffith$elm_ui$Internal$Flag$borderRound,
-		A3(
-			$mdgriffith$elm_ui$Internal$Model$Single,
-			'br-' + ($elm$core$String$fromInt(topLeft) + ('-' + ($elm$core$String$fromInt(topRight) + ($elm$core$String$fromInt(bottomLeft) + ('-' + $elm$core$String$fromInt(bottomRight)))))),
-			'border-radius',
-			$elm$core$String$fromInt(topLeft) + ('px ' + ($elm$core$String$fromInt(topRight) + ('px ' + ($elm$core$String$fromInt(bottomRight) + ('px ' + ($elm$core$String$fromInt(bottomLeft) + 'px'))))))));
-};
 var $mdgriffith$elm_ui$Internal$Model$AsRow = {$: 'AsRow'};
 var $mdgriffith$elm_ui$Internal$Model$asRow = $mdgriffith$elm_ui$Internal$Model$AsRow;
 var $mdgriffith$elm_ui$Element$row = F2(
@@ -16785,14 +16784,75 @@ var $mdgriffith$elm_ui$Element$row = F2(
 						attrs))),
 			$mdgriffith$elm_ui$Internal$Model$Unkeyed(children));
 	});
+var $mdgriffith$elm_ui$Element$text = function (content) {
+	return $mdgriffith$elm_ui$Internal$Model$Text(content);
+};
+var $author$project$PortsPos$renderToElementList = function (xs) {
+	if (!xs.b) {
+		return _List_fromArray(
+			[
+				A2(
+				$mdgriffith$elm_ui$Element$row,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$text('')
+					]))
+			]);
+	} else {
+		var numType = xs.a;
+		var tail = xs.b;
+		if (numType.$ === 'Integer') {
+			return A2(
+				$elm$core$List$cons,
+				A2(
+					$mdgriffith$elm_ui$Element$row,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$text(
+							$author$project$PortsPos$renderNumberTypetoString(numType))
+						])),
+				$author$project$PortsPos$renderToElementList(tail));
+		} else {
+			return A2(
+				$elm$core$List$cons,
+				A2(
+					$mdgriffith$elm_ui$Element$row,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$text(
+							$author$project$PortsPos$renderNumberTypetoString(numType))
+						])),
+				$author$project$PortsPos$renderToElementList(tail));
+		}
+	}
+};
+var $mdgriffith$elm_ui$Element$rgb255 = F3(
+	function (red, green, blue) {
+		return A4($mdgriffith$elm_ui$Internal$Model$Rgba, red / 255, green / 255, blue / 255, 1);
+	});
+var $mdgriffith$elm_ui$Internal$Flag$borderRound = $mdgriffith$elm_ui$Internal$Flag$flag(17);
+var $mdgriffith$elm_ui$Element$Border$roundEach = function (_v0) {
+	var topLeft = _v0.topLeft;
+	var topRight = _v0.topRight;
+	var bottomLeft = _v0.bottomLeft;
+	var bottomRight = _v0.bottomRight;
+	return A2(
+		$mdgriffith$elm_ui$Internal$Model$StyleClass,
+		$mdgriffith$elm_ui$Internal$Flag$borderRound,
+		A3(
+			$mdgriffith$elm_ui$Internal$Model$Single,
+			'br-' + ($elm$core$String$fromInt(topLeft) + ('-' + ($elm$core$String$fromInt(topRight) + ($elm$core$String$fromInt(bottomLeft) + ('-' + $elm$core$String$fromInt(bottomRight)))))),
+			'border-radius',
+			$elm$core$String$fromInt(topLeft) + ('px ' + ($elm$core$String$fromInt(topRight) + ('px ' + ($elm$core$String$fromInt(bottomRight) + ('px ' + ($elm$core$String$fromInt(bottomLeft) + 'px'))))))));
+};
 var $mdgriffith$elm_ui$Element$Font$size = function (i) {
 	return A2(
 		$mdgriffith$elm_ui$Internal$Model$StyleClass,
 		$mdgriffith$elm_ui$Internal$Flag$fontSize,
 		$mdgriffith$elm_ui$Internal$Model$FontSize(i));
-};
-var $mdgriffith$elm_ui$Element$text = function (content) {
-	return $mdgriffith$elm_ui$Internal$Model$Text(content);
 };
 var $mdgriffith$elm_ui$Element$Input$TextInputNode = function (a) {
 	return {$: 'TextInputNode', a: a};
@@ -17937,8 +17997,7 @@ var $author$project$PortsPos$view = function (model) {
 									_List_Nil,
 									_List_fromArray(
 										[
-											createButton('Add')(165)(
-											$author$project$PortsPos$DoNothing(''))(0)(0)(0)(0)(106)(166)(119)
+											createButton('Add')(165)($author$project$PortsPos$AddButtonPressed)(0)(0)(0)(0)(106)(166)(119)
 										]))
 								])),
 							A2(
@@ -17964,54 +18023,21 @@ var $author$project$PortsPos$view = function (model) {
 							$mdgriffith$elm_ui$Element$padding(10)
 						]),
 					_List_Nil),
+					A2($mdgriffith$elm_ui$Element$column, _List_Nil, _List_Nil),
 					A2(
 					$mdgriffith$elm_ui$Element$column,
 					_List_Nil,
+					$author$project$PortsPos$renderToElementList(model.numbersList)),
+					A2(
+					$mdgriffith$elm_ui$Element$row,
 					_List_fromArray(
 						[
-							A2(
-							$mdgriffith$elm_ui$Element$row,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$mdgriffith$elm_ui$Element$Input$text,
-									_List_fromArray(
-										[
-											$mdgriffith$elm_ui$Element$Border$roundEach(
-											{bottomLeft: 12, bottomRight: 12, topLeft: 12, topRight: 12}),
-											$mdgriffith$elm_ui$Element$width(
-											$mdgriffith$elm_ui$Element$px(250)),
-											$mdgriffith$elm_ui$Element$height(
-											$mdgriffith$elm_ui$Element$px(650)),
-											$mdgriffith$elm_ui$Element$Border$color(
-											A3($mdgriffith$elm_ui$Element$rgb255, 84, 83, 81)),
-											$mdgriffith$elm_ui$Element$padding(40),
-											$mdgriffith$elm_ui$Element$Background$color(
-											A3($mdgriffith$elm_ui$Element$rgb255, 174, 245, 189)),
-											$mdgriffith$elm_ui$Element$Font$light,
-											$mdgriffith$elm_ui$Element$Font$alignRight,
-											$mdgriffith$elm_ui$Element$Font$color(
-											A3($mdgriffith$elm_ui$Element$rgb255, 0, 0, 0))
-										]),
-									{
-										label: $mdgriffith$elm_ui$Element$Input$labelHidden('text box'),
-										onChange: $author$project$PortsPos$DoNothing,
-										placeholder: $elm$core$Maybe$Nothing,
-										text: '0'
-									})
-								])),
-							A2(
-							$mdgriffith$elm_ui$Element$row,
-							_List_fromArray(
-								[
-									$mdgriffith$elm_ui$Element$padding(20)
-								]),
-							_List_fromArray(
-								[
-									$mdgriffith$elm_ui$Element$text(
-									'Total : $ ' + $author$project$PortsPos$renderNumberTypetoString(model.total))
-								]))
+							$mdgriffith$elm_ui$Element$padding(40)
+						]),
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$text(
+							'Total : $ ' + $author$project$PortsPos$renderNumberTypetoString(model.total))
 						]))
 				])));
 };

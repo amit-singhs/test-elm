@@ -36,9 +36,15 @@ main =
 type alias Model =
     { displayedNumber : NumberType
     , inputNumber : NumberType
+    , operationType : Maybe Operation
     , numbersList : List NumberType
     , total : NumberType
+    , decimalButtonIsOn : Bool
     }
+
+
+type Operation
+    = PressingAddButton
 
 
 type NumberType
@@ -100,6 +106,29 @@ renderNumberTypetoString numType =
             String.fromFloat (toFloat intNumber / toFloat (10 ^ decimalPlace))
 
 
+renderToElementList : List NumberType -> List (Element Msg)
+renderToElementList xs =
+    case xs of
+        [] ->
+            [ row [] [ Element.text "" ] ]
+
+        numType :: tail ->
+            case numType of
+                Integer _ ->
+                    row [] [ Element.text (renderNumberTypetoString numType) ] :: renderToElementList tail
+
+                Decimal _ _ ->
+                    row [] [ Element.text (renderNumberTypetoString numType) ] :: renderToElementList tail
+
+
+
+--                    case numType of
+--                        Integer _ ->
+--                            [row [] [Element.text (renderNumberTypetoString numType)]] :: renderToElementList tail
+--                       Decimal _ _ ->
+--                           [row [] [Element.text (renderNumberTypetoString numType)]] :: renderToElementList tail
+
+
 addTwoNumberTypes : NumberType -> NumberType -> NumberType
 addTwoNumberTypes numType1 numType2 =
     case numType1 of
@@ -124,8 +153,10 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( { displayedNumber = Integer 0
       , inputNumber = Integer 0
-      , numbersList = [ Integer 0 ]
+      , numbersList = []
       , total = Integer 0
+      , operationType = Nothing
+      , decimalButtonIsOn = False
       }
     , Cmd.none
     )
@@ -156,12 +187,22 @@ update msg model =
                             --Decimal (v + toFloat d / toFloat (10 ^ decimalPlace)) (decimalPlace + 1)
                             Decimal ((v * 10) + d) (decimalPlace + 1)
             in
-            ( { model
-                | displayedNumber = insertAtOnes model.displayedNumber digit
-                , inputNumber = insertAtOnes model.displayedNumber digit
-              }
-            , Cmd.none
-            )
+            case model.operationType of
+                Nothing ->
+                    ( { model
+                        | displayedNumber = insertAtOnes model.displayedNumber digit
+                        , inputNumber = insertAtOnes model.displayedNumber digit
+                      }
+                    , Cmd.none
+                    )
+
+                Just _ ->
+                    ( { model
+                        | inputNumber = insertAtOnes model.inputNumber digit
+                        , displayedNumber = insertAtOnes model.inputNumber digit
+                      }
+                    , Cmd.none
+                    )
 
         DecimalButtonPressed ->
             let
@@ -181,7 +222,14 @@ update msg model =
             )
 
         AddButtonPressed ->
-            ( { model | total = addTwoNumberTypes model.total model.inputNumber }
+            ( { model
+                | operationType = Just PressingAddButton
+                , total = addTwoNumberTypes model.total model.inputNumber
+                , displayedNumber = model.inputNumber
+                , inputNumber = Integer 0
+                , decimalButtonIsOn = False
+                , numbersList = model.inputNumber :: model.numbersList
+              }
             , Cmd.none
             )
 
@@ -270,37 +318,14 @@ view model =
                 , row []
                     [ column [] [ createButton "." 165 DecimalButtonPressed 0 0 0 0 106 166 119 ]
                     , column [] [ createButton "0" 165 (InsertDigit 0) 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "Add" 165 (DoNothing "") 0 0 0 0 106 166 119 ]
+                    , column [] [ createButton "Add" 165 AddButtonPressed 0 0 0 0 106 166 119 ]
                     ]
                 , row []
                     [ column [] [ createButton ("Pay: $ " ++ renderNumberTypetoString model.total) 495 (DoNothing "") 0 0 0 0 106 166 119 ]
                     ]
                 ]
             , column [ padding 10 ] []
-            , column []
-                [ row []
-                    [ Input.text
-                        [ Border.roundEach
-                            { topLeft = 12
-                            , topRight = 12
-                            , bottomLeft = 12
-                            , bottomRight = 12
-                            }
-                        , Element.width (px 250)
-                        , Element.height (px 650)
-                        , Border.color <| Element.rgb255 84 83 81
-                        , padding 40
-                        , Background.color <| Element.rgb255 174 245 189
-                        , Font.light
-                        , Font.alignRight
-                        , Font.color <| Element.rgb255 0 0 0
-                        ]
-                        { label = Input.labelHidden "text box"
-                        , onChange = DoNothing
-                        , placeholder = Nothing
-                        , text = "0"
-                        }
-                    ]
-                , row [ padding 20 ] [ Element.text ("Total : $ " ++ renderNumberTypetoString model.total) ]
-                ]
+            , column [] []
+            , column [] (renderToElementList model.numbersList)
+            , row [ padding 40 ] [ Element.text ("Total : $ " ++ renderNumberTypetoString model.total) ]
             ]
