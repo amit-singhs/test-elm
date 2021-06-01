@@ -8,7 +8,7 @@
     "build": "npm run clean && cd public && npx parcel build --cache-dir ../.cache -d ../dist index.html",
     "start-old": "npx elm-live src/PortsPos.elm --hot --start-page=public/index.html -- --debug --output=public/main.js",
     "start": "cd public && npx parcel -d ../dist --cache-dir ../.cache index.html",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf ./dist"
   },
   "repository": {
     "type": "git",
