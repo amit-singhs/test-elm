@@ -9,11 +9,32 @@ import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input exposing (username)
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Html exposing (Html)
 import Http
 import Main exposing (Msg(..))
+import QRCode
+import Svg.Attributes as SvgA
+
+
+
+-- TODO
+-- + implement QR code, when pay button is pressed.
+-- - Implement USD to BCH Conversion.exposing
+-- - Fetch the BCH price from fullstack.cash API.
+-- GLOBALS
+
+
+bchUsdPrice =
+    700.0
+
+
+
+-- UTILITIES
+
+
+convertUsdToBch : Float -> Float
+convertUsdToBch usd =
+    usd / bchUsdPrice
 
 
 
@@ -108,25 +129,23 @@ renderNumberTypetoString numType =
 
 renderToElementList : List NumberType -> List (Element Msg)
 renderToElementList xs =
+    let
+        attributes =
+            []
+    in
     case xs of
         [] ->
-            [ row [] [ Element.text "" ] ]
+            []
 
         numType :: tail ->
             case numType of
                 Integer _ ->
-                    row [] [ Element.text (renderNumberTypetoString numType) ] :: renderToElementList tail
+                    row attributes [ Element.text (renderNumberTypetoString numType) ]
+                        :: renderToElementList tail
 
                 Decimal _ _ ->
-                    row [] [ Element.text (renderNumberTypetoString numType) ] :: renderToElementList tail
-
-
-
---                    case numType of
---                        Integer _ ->
---                            [row [] [Element.text (renderNumberTypetoString numType)]] :: renderToElementList tail
---                       Decimal _ _ ->
---                           [row [] [Element.text (renderNumberTypetoString numType)]] :: renderToElementList tail
+                    row attributes [ Element.text (renderNumberTypetoString numType) ]
+                        :: renderToElementList tail
 
 
 addTwoNumberTypes : NumberType -> NumberType -> NumberType
@@ -243,6 +262,24 @@ subscriptions model =
     Sub.none
 
 
+
+-- VIEWS
+
+
+qrCodeView : String -> Element msg
+qrCodeView message =
+    html
+        (QRCode.fromStringWith QRCode.High message
+            |> Result.map
+                (QRCode.toSvg
+                    [ SvgA.width "500px"
+                    , SvgA.height "500px"
+                    ]
+                )
+            |> Result.withDefault (Html.text "Error while encoding to QRCode.")
+        )
+
+
 view : Model -> Html Msg
 view model =
     let
@@ -274,9 +311,16 @@ view model =
                 { onPress = Just buttonEvent
                 , label = Element.text buttonLabel
                 }
+
+        qrCodeStringValue =
+            "bitcoincash:qze75dks3vtgr3ezeg0jgkmezl2ttvpylyrk26dlsq?amount="
+                ++ String.fromFloat
+                    (convertUsdToBch <|
+                        renderNumberTypetoFloat model.total
+                    )
     in
     Element.layout [] <|
-        row [ padding 40 ]
+        row [ padding 40, spacing 5 ]
             [ column [ Element.width fill ]
                 [ row []
                     [ Input.text
@@ -323,9 +367,11 @@ view model =
                 , row []
                     [ column [] [ createButton ("Pay: $ " ++ renderNumberTypetoString model.total) 495 (DoNothing "") 0 0 0 0 106 166 119 ]
                     ]
+                , row []
+                    [ qrCodeView qrCodeStringValue
+                    ]
+                , row [] [ text qrCodeStringValue ]
                 ]
-            , column [ padding 10 ] []
-            , column [] []
-            , column [] (renderToElementList model.numbersList)
-            , row [ padding 40 ] [ Element.text ("Total : $ " ++ renderNumberTypetoString model.total) ]
+            , column [ spacing 10 ] (renderToElementList model.numbersList)
+            , column [ padding 20 ] [ text ("Total : $ " ++ renderNumberTypetoString model.total) ]
             ]
