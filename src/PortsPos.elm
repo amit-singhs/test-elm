@@ -1,4 +1,4 @@
-module PortsPos exposing (..)
+port module PortsPos exposing (..)
 
 --import Element.Text as text exposing (..)
 
@@ -9,7 +9,7 @@ import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input exposing (username)
-import Html exposing (Html)
+import Html exposing (Html, address)
 import Http
 import Main exposing (Msg(..))
 import QRCode
@@ -51,6 +51,16 @@ main =
 
 
 
+-- PORTS
+
+
+port getCashAddress : () -> Cmd msg
+
+
+port cashAddressReceiver : (String -> msg) -> Sub msg
+
+
+
 -- MODEL
 
 
@@ -61,6 +71,7 @@ type alias Model =
     , numbersList : List NumberType
     , total : NumberType
     , decimalButtonIsOn : Bool
+    , walletAddress : Maybe String
     }
 
 
@@ -83,6 +94,7 @@ type Msg
     | InsertDigit Int
     | DecimalButtonPressed
     | AddButtonPressed
+    | CashAddressRecv String
 
 
 removeDecimal floatNumber =
@@ -176,8 +188,9 @@ init _ =
       , total = Integer 0
       , operationType = Nothing
       , decimalButtonIsOn = False
+      , walletAddress = Nothing
       }
-    , Cmd.none
+    , getCashAddress ()
     )
 
 
@@ -252,6 +265,11 @@ update msg model =
             , Cmd.none
             )
 
+        CashAddressRecv address ->
+            ( { model | walletAddress = Just address }
+            , Cmd.none
+            )
+
 
 
 -- SUBSCRIPTIONS
@@ -259,25 +277,50 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    cashAddressReceiver CashAddressRecv
 
 
 
 -- VIEWS
 
 
-qrCodeView : String -> Element msg
-qrCodeView message =
-    html
-        (QRCode.fromStringWith QRCode.High message
-            |> Result.map
-                (QRCode.toSvg
-                    [ SvgA.width "500px"
-                    , SvgA.height "500px"
+buildCashDataURI : String -> NumberType -> String
+buildCashDataURI address total =
+    address
+        ++ "?total="
+        ++ String.fromFloat
+            (convertUsdToBch <|
+                renderNumberTypetoFloat total
+            )
+
+
+qrCodeView : Model -> Element msg
+qrCodeView model =
+    Element.el [] <|
+        case model.walletAddress of
+            Just address ->
+                let
+                    dataURI =
+                        buildCashDataURI address model.total
+                in
+                Element.column []
+                    [ Element.row []
+                        [ html
+                            (QRCode.fromStringWith QRCode.High dataURI
+                                |> Result.map
+                                    (QRCode.toSvg
+                                        [ SvgA.width "500px"
+                                        , SvgA.height "500px"
+                                        ]
+                                    )
+                                |> Result.withDefault (Html.text "Error while encoding to QRCode.")
+                            )
+                        ]
+                    , Element.row [] [ text dataURI ]
                     ]
-                )
-            |> Result.withDefault (Html.text "Error while encoding to QRCode.")
-        )
+
+            Nothing ->
+                text "No address found"
 
 
 view : Model -> Html Msg
@@ -311,13 +354,6 @@ view model =
                 { onPress = Just buttonEvent
                 , label = Element.text buttonLabel
                 }
-
-        qrCodeStringValue =
-            "bitcoincash:qze75dks3vtgr3ezeg0jgkmezl2ttvpylyrk26dlsq?amount="
-                ++ String.fromFloat
-                    (convertUsdToBch <|
-                        renderNumberTypetoFloat model.total
-                    )
     in
     Element.layout [] <|
         row [ padding 40, spacing 5 ]
@@ -368,9 +404,8 @@ view model =
                     [ column [] [ createButton ("Pay: $ " ++ renderNumberTypetoString model.total) 495 (DoNothing "") 0 0 0 0 106 166 119 ]
                     ]
                 , row []
-                    [ qrCodeView qrCodeStringValue
+                    [ qrCodeView model
                     ]
-                , row [] [ text qrCodeStringValue ]
                 ]
             , column [ spacing 10 ] (renderToElementList model.numbersList)
             , column [ padding 20 ] [ text ("Total : $ " ++ renderNumberTypetoString model.total) ]
