@@ -3,6 +3,7 @@ port module PortsPos exposing (..)
 --import Element.Text as text exposing (..)
 
 import Browser
+import Dialog
 import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
@@ -72,6 +73,20 @@ type alias Model =
     , total : NumberType
     , decimalButtonIsOn : Bool
     , walletAddress : Maybe String
+    , showDialog : Bool
+    }
+
+
+type alias Config msg =
+    { closeMessage : Maybe Msg
+    , maskAttributes : List (Attribute msg)
+    , containerAttributes : List (Attribute msg)
+    , headerAttributes : List (Attribute msg)
+    , bodyAttributes : List (Attribute msg)
+    , footerAttributes : List (Attribute msg)
+    , header : Maybe (Element msg)
+    , body : Maybe (Element msg)
+    , footer : Maybe (Element msg)
     }
 
 
@@ -95,6 +110,8 @@ type Msg
     | DecimalButtonPressed
     | AddButtonPressed
     | CashAddressRecv String
+    | ShowDialog
+    | CloseDialog
 
 
 removeDecimal floatNumber =
@@ -189,6 +206,7 @@ init _ =
       , operationType = Nothing
       , decimalButtonIsOn = False
       , walletAddress = Nothing
+      , showDialog = False
       }
     , getCashAddress ()
     )
@@ -267,6 +285,16 @@ update msg model =
 
         CashAddressRecv address ->
             ( { model | walletAddress = Just address }
+            , Cmd.none
+            )
+
+        ShowDialog ->
+            ( { model | showDialog = True }
+            , Cmd.none
+            )
+
+        CloseDialog ->
+            ( { model | showDialog = False }
             , Cmd.none
             )
 
@@ -354,8 +382,27 @@ view model =
                 { onPress = Just buttonEvent
                 , label = Element.text buttonLabel
                 }
+
+        config =
+            { closeMessage = Just CloseDialog
+            , maskAttributes = []
+            , containerAttributes = [ padding 10 ]
+            , headerAttributes = []
+            , bodyAttributes = []
+            , footerAttributes = []
+            , header = Just (text "Header text ")
+            , body = Just (qrCodeView model)
+            , footer = Just (text "This is a footer text and it is supposed to be at the bottom")
+            }
+
+        dialogConfig =
+            if model.showDialog then
+                Just config
+
+            else
+                Nothing
     in
-    Element.layout [] <|
+    Element.layout [ inFront (Dialog.view dialogConfig) ] <|
         row [ padding 40, spacing 5 ]
             [ column [ Element.width fill ]
                 [ row []
@@ -406,6 +453,7 @@ view model =
                 , row []
                     [ qrCodeView model
                     ]
+                , row [] [ createButton "Show Dialog" 165 ShowDialog 0 0 0 0 106 166 119 ]
                 ]
             , column [ spacing 10 ] (renderToElementList model.numbersList)
             , column [ padding 20 ] [ text ("Total : $ " ++ renderNumberTypetoString model.total) ]
