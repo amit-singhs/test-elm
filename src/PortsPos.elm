@@ -4,13 +4,15 @@ port module PortsPos exposing (..)
 
 import Browser
 import Dialog
+import Dict exposing (size)
 import Element exposing (..)
 import Element.Background as Background
-import Element.Border as Border
+import Element.Border as Border exposing (rounded)
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input exposing (username)
 import Html exposing (Html, address)
+import Html.Attributes exposing (align)
 import Http
 import Main exposing (Msg(..))
 import QRCode
@@ -385,10 +387,10 @@ view model =
 
         config =
             { closeMessage = Just CloseDialog
-            , maskAttributes = []
-            , containerAttributes = [ padding 10 ]
+            , maskAttributes = [ height (px 760), width (px 730), Background.color <| Element.rgb255 255 255 228 ]
+            , containerAttributes = [ padding 50, spacing 40, alignRight, rounded 80 ]
             , headerAttributes = []
-            , bodyAttributes = []
+            , bodyAttributes = [ alignRight ]
             , footerAttributes = []
             , header = Just (text "Header text ")
             , body = Just (qrCodeView model)
