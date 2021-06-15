@@ -1,7 +1,10 @@
 port module PortsPos exposing (..)
 
 --import Element.Text as text exposing (..)
+--import Bootstrap.Modal.Visibility
 
+import Bootstrap.Button as Button
+import Bootstrap.Modal as Modal
 import Browser
 import Dialog
 import Dict exposing (size)
@@ -11,8 +14,9 @@ import Element.Border as Border exposing (rounded)
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input exposing (username)
-import Html exposing (Html, address)
+import Html exposing (Html, address, button, div, p)
 import Html.Attributes exposing (align)
+import Html.Events exposing (onClick)
 import Http
 import Main exposing (Msg(..))
 import QRCode
@@ -76,6 +80,7 @@ type alias Model =
     , decimalButtonIsOn : Bool
     , walletAddress : Maybe String
     , showDialog : Bool
+    , modalVisibility : Modal.Visibility
     }
 
 
@@ -114,6 +119,8 @@ type Msg
     | CashAddressRecv String
     | ShowDialog
     | CloseDialog
+    | CloseModal
+    | ShowModal
 
 
 removeDecimal floatNumber =
@@ -209,6 +216,7 @@ init _ =
       , decimalButtonIsOn = False
       , walletAddress = Nothing
       , showDialog = False
+      , modalVisibility = Modal.hidden
       }
     , getCashAddress ()
     )
@@ -297,6 +305,16 @@ update msg model =
 
         CloseDialog ->
             ( { model | showDialog = False }
+            , Cmd.none
+            )
+
+        CloseModal ->
+            ( { model | modalVisibility = Modal.hidden }
+            , Cmd.none
+            )
+
+        ShowModal ->
+            ( { model | modalVisibility = Modal.shown }
             , Cmd.none
             )
 
@@ -403,60 +421,96 @@ view model =
 
             else
                 Nothing
-    in
-    Element.layout [ inFront (Dialog.view dialogConfig) ] <|
-        row [ padding 40, spacing 5 ]
-            [ column [ Element.width fill ]
-                [ row []
-                    [ Input.text
-                        [ Border.roundEach
-                            { topLeft = 12
-                            , topRight = 12
-                            , bottomLeft = 0
-                            , bottomRight = 0
-                            }
-                        , Element.width (px 495)
-                        , Border.color <| Element.rgb255 84 83 81
-                        , padding 40
-                        , Background.color <| Element.rgb255 174 245 189
-                        , Font.light
-                        , Font.alignRight
-                        , Font.color <| Element.rgb255 0 0 0
+
+        modalConfig =
+            Modal.config CloseModal
+                |> Modal.small
+                |> Modal.hideOnBackdropClick True
+                |> Modal.h3 [] [ Html.text "Modal Header" ]
+                |> Modal.body [] [ p [] [ Html.text "This is a modal for you !" ] ]
+                |> Modal.footer []
+                    [ Button.button
+                        [ Button.outlinePrimary
+                        , Button.attrs [ onClick CloseModal ]
                         ]
-                        { label = Input.labelHidden "input text box"
-                        , onChange = DoNothing
-                        , placeholder = Nothing
-                        , text = renderNumberTypetoString model.displayedNumber
-                        }
+                        [ Html.text "Close" ]
                     ]
-                , row []
-                    [ column [] [ createButton "1" 165 (InsertDigit 1) 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "2" 165 (InsertDigit 2) 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "3" 165 (InsertDigit 3) 0 0 0 0 106 166 119 ]
-                    ]
-                , row []
-                    [ column [] [ createButton "4" 165 (InsertDigit 4) 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "5" 165 (InsertDigit 5) 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "6" 165 (InsertDigit 6) 0 0 0 0 106 166 119 ]
-                    ]
-                , row []
-                    [ column [] [ createButton "7" 165 (InsertDigit 7) 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "8" 165 (InsertDigit 8) 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "9" 165 (InsertDigit 9) 0 0 0 0 106 166 119 ]
-                    ]
-                , row []
-                    [ column [] [ createButton "." 165 DecimalButtonPressed 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "0" 165 (InsertDigit 0) 0 0 0 0 106 166 119 ]
-                    , column [] [ createButton "Add" 165 AddButtonPressed 0 0 0 0 106 166 119 ]
-                    ]
-                , row []
-                    [ column [] [ createButton ("Pay: $ " ++ renderNumberTypetoString model.total) 495 (DoNothing "") 0 0 0 0 106 166 119 ]
-                    ]
-                , row []
-                    [ qrCodeView model
-                    ]
-                , row [] [ createButton "Show Dialog" 165 ShowDialog 0 0 0 0 106 166 119 ]
-                ]
-            , column [ spacing 10 ] (renderToElementList model.numbersList)
-            , column [ padding 20 ] [ text ("Total : $ " ++ renderNumberTypetoString model.total) ]
+                |> Modal.view model.modalVisibility
+    in
+    {- Element.layout [ inFront (Dialog.view dialogConfig) ] <|
+       row [ padding 40, spacing 5 ]
+           [ column [ Element.width fill ]
+               [ row []
+                   [ Input.text
+                       [ Border.roundEach
+                           { topLeft = 12
+                           , topRight = 12
+                           , bottomLeft = 0
+                           , bottomRight = 0
+                           }
+                       , Element.width (px 495)
+                       , Border.color <| Element.rgb255 84 83 81
+                       , padding 40
+                       , Background.color <| Element.rgb255 174 245 189
+                       , Font.light
+                       , Font.alignRight
+                       , Font.color <| Element.rgb255 0 0 0
+                       ]
+                       { label = Input.labelHidden "input text box"
+                       , onChange = DoNothing
+                       , placeholder = Nothing
+                       , text = renderNumberTypetoString model.displayedNumber
+                       }
+                   ]
+               , row []
+                   [ column [] [ createButton "1" 165 (InsertDigit 1) 0 0 0 0 106 166 119 ]
+                   , column [] [ createButton "2" 165 (InsertDigit 2) 0 0 0 0 106 166 119 ]
+                   , column [] [ createButton "3" 165 (InsertDigit 3) 0 0 0 0 106 166 119 ]
+                   ]
+               , row []
+                   [ column [] [ createButton "4" 165 (InsertDigit 4) 0 0 0 0 106 166 119 ]
+                   , column [] [ createButton "5" 165 (InsertDigit 5) 0 0 0 0 106 166 119 ]
+                   , column [] [ createButton "6" 165 (InsertDigit 6) 0 0 0 0 106 166 119 ]
+                   ]
+               , row []
+                   [ column [] [ createButton "7" 165 (InsertDigit 7) 0 0 0 0 106 166 119 ]
+                   , column [] [ createButton "8" 165 (InsertDigit 8) 0 0 0 0 106 166 119 ]
+                   , column [] [ createButton "9" 165 (InsertDigit 9) 0 0 0 0 106 166 119 ]
+                   ]
+               , row []
+                   [ column [] [ createButton "." 165 DecimalButtonPressed 0 0 0 0 106 166 119 ]
+                   , column [] [ createButton "0" 165 (InsertDigit 0) 0 0 0 0 106 166 119 ]
+                   , column [] [ createButton "Add" 165 AddButtonPressed 0 0 0 0 106 166 119 ]
+                   ]
+               , row []
+                   [ column [] [ createButton ("Pay: $ " ++ renderNumberTypetoString model.total) 495 (DoNothing "") 0 0 0 0 106 166 119 ]
+                   ]
+               , row []
+                   [ qrCodeView model
+                   ]
+               , row [] [ createButton "Show Dialog" 165 ShowModal 0 0 0 0 106 166 119 ]
+               ]
+           , column [ spacing 10 ] (renderToElementList model.numbersList)
+           , column [ padding 20 ] [ text ("Total : $ " ++ renderNumberTypetoString model.total) ]
+           ]
+    -}
+    div []
+        [ Button.button
+            [ Button.outlineSuccess
+            , Button.attrs [ onClick <| ShowModal ]
             ]
+            [ Html.text "Open modal" ]
+        , Modal.config CloseModal
+            |> Modal.small
+            |> Modal.hideOnBackdropClick True
+            |> Modal.h3 [] [ Html.text "Modal header" ]
+            |> Modal.body [] [ p [] [ Html.text "This is a modal for you !" ] ]
+            |> Modal.footer []
+                [ Button.button
+                    [ Button.outlinePrimary
+                    , Button.attrs [ onClick CloseModal ]
+                    ]
+                    [ Html.text "Close" ]
+                ]
+            |> Modal.view model.modalVisibility
+        ]
