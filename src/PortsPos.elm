@@ -374,6 +374,74 @@ createButton buttonLabel buttonlength buttonEvent tL tR bL bR r g b =
         }
 
 
+viewModalPlaceholder : Model -> Element Msg
+viewModalPlaceholder model =
+    if model.showModal == False then
+        Element.none
+
+    else
+        row
+            [ width fill
+            , height fill
+            , Background.color Palette.overlayBGColor
+            ]
+            [ column
+                [ Background.color Palette.white
+                , centerX
+                , centerY
+                , padding 25
+                , Border.rounded 5
+                ]
+                [ row
+                    [ Region.heading 1
+                    , Font.size 30
+                    , width fill
+                    , paddingXY 0 10
+                    , Border.widthEach
+                        { bottom = 1
+                        , left = 0
+                        , right = 0
+                        , top = 0
+                        }
+                    ]
+                    [ column
+                        [ width <| fillPortion 40
+                        , paddingEach
+                            { bottom = 0
+                            , left = 0
+                            , right = 50
+                            , top = 0
+                            }
+                        ]
+                        [ text "Modal Header" ]
+                    , column [ width <| fillPortion 1, Events.onClick HideModal ]
+                        [ Heroicons.x
+                            [ SvgA.height "25px"
+                            , SvgA.width "25px"
+                            ]
+                            |> html
+                        ]
+                    ]
+                , row
+                    [ Border.widthEach
+                        { bottom = 1
+                        , left = 0
+                        , right = 0
+                        , top = 0
+                        }
+                    , paddingXY 0 25
+                    , width fill
+                    ]
+                    [ qrCodeView model ]
+                , row
+                    [ paddingXY 0 15
+                    , alignRight
+                    ]
+                    [ text "Close" ]
+                ]
+            ]
+
+
 view : Model -> Html Msg
 view model =
     Element.layout [ inFront <| viewModalPlaceholder model ] <|
