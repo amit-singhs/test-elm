@@ -1,19 +1,22 @@
 port module PortsPos exposing (..)
 
 --import Element.Text as text exposing (..)
+-- import Html.Events exposing (onClick)
 
 import Browser
 import Dict exposing (size)
 import Element exposing (..)
 import Element.Background as Background
-import Element.Border as Border exposing (rounded)
+import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input exposing (username)
-import Html exposing (Html, address)
-import Html.Attributes exposing (align)
+import Element.Region as Region
+import Heroicons.Solid as Heroicons
+import Html exposing (Html)
 import Http
 import Main exposing (Msg(..))
+import Palette
 import QRCode
 import Svg.Attributes as SvgA
 
@@ -21,6 +24,8 @@ import Svg.Attributes as SvgA
 
 -- TODO
 -- + implement QR code, when pay button is pressed.
+-- - *Show QR code only when pay button is pressed.
+-- - Refactor the input.text box for the amount display field to a simple span
 -- - Implement USD to BCH Conversion.exposing
 -- - Fetch the BCH price from fullstack.cash API.
 -- GLOBALS
@@ -74,6 +79,7 @@ type alias Model =
     , total : NumberType
     , decimalButtonIsOn : Bool
     , walletAddress : Maybe String
+    , showModal : Bool
     }
 
 
@@ -97,6 +103,8 @@ type Msg
     | DecimalButtonPressed
     | AddButtonPressed
     | CashAddressRecv String
+    | DisplayModal
+    | HideModal
 
 
 removeDecimal floatNumber =
@@ -191,6 +199,7 @@ init _ =
       , operationType = Nothing
       , decimalButtonIsOn = False
       , walletAddress = Nothing
+      , showModal = False
       }
     , getCashAddress ()
     )
@@ -204,8 +213,8 @@ update msg model =
             , Cmd.none
             )
 
-        DoNothing inputString ->
-            ( { model | displayedNumber = model.inputNumber }
+        DoNothing _ ->
+            ( model
             , Cmd.none
             )
 
@@ -218,7 +227,6 @@ update msg model =
                             Integer ((v * 10) + d)
 
                         Decimal v decimalPlace ->
-                            --Decimal (v + toFloat d / toFloat (10 ^ decimalPlace)) (decimalPlace + 1)
                             Decimal ((v * 10) + d) (decimalPlace + 1)
             in
             case model.operationType of
@@ -272,6 +280,16 @@ update msg model =
             , Cmd.none
             )
 
+        DisplayModal ->
+            ( { model | showModal = True }
+            , Cmd.none
+            )
+
+        HideModal ->
+            ( { model | showModal = False }
+            , Cmd.none
+            )
+
 
 
 -- SUBSCRIPTIONS
@@ -306,7 +324,7 @@ qrCodeView model =
                         buildCashDataURI address model.total
                 in
                 Element.column []
-                    [ Element.row []
+                    [ Element.row [ centerX ]
                         [ html
                             (QRCode.fromStringWith QRCode.High dataURI
                                 |> Result.map
@@ -325,39 +343,40 @@ qrCodeView model =
                 text "No address found"
 
 
+createButton : String -> Int -> Msg -> Int -> Int -> Int -> Int -> Int -> Int -> Int -> Element Msg
+createButton buttonLabel buttonlength buttonEvent tL tR bL bR r g b =
+    Input.button
+        [ Element.height (px 60)
+        , Element.width (px buttonlength)
+        , Border.width 1
+        , Border.roundEach
+            { topLeft = tL
+            , topRight = tR
+            , bottomLeft = bL
+            , bottomRight = bR
+            }
+        , Border.color <| Element.rgb255 84 83 81
+        , Font.size 25
+        , Font.family
+            [ Font.typeface "Helvetica"
+            ]
+        , Background.color <| Element.rgb255 r g b
+        , Font.color <| Element.rgb255 228 228 228
+        , Font.medium
+        , Font.center
+        , mouseDown
+            [ Background.color <| Element.rgb255 180 180 179
+            , Border.color <| Element.rgb255 84 83 81
+            ]
+        ]
+        { onPress = Just buttonEvent
+        , label = Element.text buttonLabel
+        }
+
+
 view : Model -> Html Msg
 view model =
-    let
-        createButton buttonLabel buttonlength buttonEvent tL tR bL bR r g b =
-            Input.button
-                [ Element.height (px 60)
-                , Element.width (px buttonlength)
-                , Border.width 1
-                , Border.roundEach
-                    { topLeft = tL
-                    , topRight = tR
-                    , bottomLeft = bL
-                    , bottomRight = bR
-                    }
-                , Border.color <| Element.rgb255 84 83 81
-                , Font.size 25
-                , Font.family
-                    [ Font.typeface "Helvetica"
-                    ]
-                , Background.color <| Element.rgb255 r g b
-                , Font.color <| Element.rgb255 228 228 228
-                , Font.medium
-                , Font.center
-                , mouseDown
-                    [ Background.color <| Element.rgb255 180 180 179
-                    , Border.color <| Element.rgb255 84 83 81
-                    ]
-                ]
-                { onPress = Just buttonEvent
-                , label = Element.text buttonLabel
-                }
-    in
-    Element.layout [] <|
+    Element.layout [ inFront <| viewModalPlaceholder model ] <|
         row [ padding 40, spacing 5 ]
             [ column [ Element.width fill ]
                 [ row []
@@ -403,10 +422,7 @@ view model =
                     , column [] [ createButton "Add" 165 AddButtonPressed 0 0 0 0 106 166 119 ]
                     ]
                 , row []
-                    [ column [] [ createButton ("Pay: $ " ++ renderNumberTypetoString model.total) 495 (DoNothing "") 0 0 0 0 106 166 119 ]
-                    ]
-                , row []
-                    [ qrCodeView model
+                    [ column [] [ createButton ("Pay: $ " ++ renderNumberTypetoString model.total) 495 DisplayModal 0 0 0 0 106 166 119 ]
                     ]
                 ]
             , column [ spacing 10 ] (renderToElementList model.numbersList)
