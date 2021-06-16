@@ -4,6 +4,8 @@ port module PortsPos exposing (..)
 --import Bootstrap.Modal.Visibility
 
 import Bootstrap.Button as Button
+import Bootstrap.CDN as CDN
+import Bootstrap.Grid as Grid
 import Bootstrap.Modal as Modal
 import Browser
 import Dialog
