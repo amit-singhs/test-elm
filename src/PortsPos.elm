@@ -4,28 +4,23 @@ port module PortsPos exposing (..)
 -- import Html.Events exposing (onClick)
 
 import Browser
-import Dict exposing (size)
 import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
-import Element.Events as Events
 import Element.Font as Font
-import Element.Input as Input exposing (username)
-import Element.Region as Region
-import Heroicons.Solid as Heroicons
+import Element.Input as Input
 import Html exposing (Html)
-import Http
 import Main exposing (Msg(..))
-import Palette
 import QRCode
 import Svg.Attributes as SvgA
+import UxComponents
 
 
 
 -- TODO
 -- + implement QR code, when pay button is pressed.
 -- - *Show QR code only when pay button is pressed.
--- - Refactor the input.text box for the amount display field to a simple span
+-- - Refactor the input.text box for the amount display field to a simple el
 -- - Implement USD to BCH Conversion.exposing
 -- - Fetch the BCH price from fullstack.cash API.
 -- GLOBALS
@@ -374,79 +369,23 @@ createButton buttonLabel buttonlength buttonEvent tL tR bL bR r g b =
         }
 
 
-viewModalPlaceholder : Model -> Element Msg
-viewModalPlaceholder model =
-    if model.showModal == False then
-        Element.none
-
-    else
-        row
-            [ width fill
-            , height fill
-            , Background.color Palette.overlayBGColor
-            ]
-            [ column
-                [ Background.color Palette.white
-                , centerX
-                , centerY
-                , padding 25
-                , Border.rounded 5
-                ]
-                [ row
-                    [ Region.heading 1
-                    , Font.size 30
-                    , width fill
-                    , paddingXY 0 10
-                    , Border.widthEach
-                        { bottom = 1
-                        , left = 0
-                        , right = 0
-                        , top = 0
-                        }
-                    ]
-                    [ column
-                        [ width <| fillPortion 40
-                        , paddingEach
-                            { bottom = 0
-                            , left = 0
-                            , right = 50
-                            , top = 0
-                            }
-                        ]
-                        [ text "Modal Header" ]
-                    , column [ width <| fillPortion 1, Events.onClick HideModal ]
-                        [ Heroicons.x
-                            [ SvgA.height "25px"
-                            , SvgA.width "25px"
-                            ]
-                            |> html
-                        ]
-                    ]
-                , row
-                    [ Border.widthEach
-                        { bottom = 1
-                        , left = 0
-                        , right = 0
-                        , top = 0
-                        }
-                    , paddingXY 0 25
-                    , width fill
-                    ]
-                    [ qrCodeView model ]
-                , row
-                    [ paddingXY 0 15
-                    , alignRight
-                    ]
-                    [ text "Close" ]
-                ]
-            ]
-
-
 view : Model -> Html Msg
 view model =
-    Element.layout [ inFront <| viewModalPlaceholder model ] <|
-        row [ padding 40, spacing 5 ]
-            [ column [ Element.width fill ]
+    Element.layout
+        [ inFront <|
+            UxComponents.viewModalPlaceholder model.showModal
+                { title = "QR Code for payment"
+                , body = qrCodeView model
+                , onClose = HideModal
+                }
+        ]
+    <|
+        row
+            [ padding 40
+            , spacing 5
+            , width fill
+            ]
+            [ column [ Element.width <| fillPortion 1618 ]
                 [ row []
                     [ Input.text
                         [ Border.roundEach
@@ -493,6 +432,8 @@ view model =
                     [ column [] [ createButton ("Pay: $ " ++ renderNumberTypetoString model.total) 495 DisplayModal 0 0 0 0 106 166 119 ]
                     ]
                 ]
-            , column [ spacing 10 ] (renderToElementList model.numbersList)
-            , column [ padding 20 ] [ text ("Total : $ " ++ renderNumberTypetoString model.total) ]
+            , column [ spacing 10, width <| fillPortion 1000 ] <|
+                renderToElementList model.numbersList
+                    ++ [ text ("Total : $ " ++ renderNumberTypetoString model.total)
+                       ]
             ]
