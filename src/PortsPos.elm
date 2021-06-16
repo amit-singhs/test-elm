@@ -3,7 +3,6 @@ port module PortsPos exposing (..)
 --import Element.Text as text exposing (..)
 
 import Browser
-import Dialog
 import Dict exposing (size)
 import Element exposing (..)
 import Element.Background as Background
@@ -404,7 +403,7 @@ view model =
             else
                 Nothing
     in
-    Element.layout [ inFront (Dialog.view dialogConfig) ] <|
+    Element.layout [] <|
         row [ padding 40, spacing 5 ]
             [ column [ Element.width fill ]
                 [ row []
