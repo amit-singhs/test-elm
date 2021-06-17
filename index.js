@@ -17,8 +17,12 @@ app.ports.getCashAddress.subscribe(_ => {
         // derive hardened child HDNode
         let account = bchjs.HDNode.deriveHardened(hdNode, 0);
         let cashAddress = bchjs.HDNode.toCashAddress(account)
-        console.log(cashAddress)
         app.ports.cashAddressReceiver.send(cashAddress)
     })
 })
 
+app.ports.getBchPrice.subscribe(_ => {
+    bchjs.Price.getBchUsd().then(current => {
+        app.ports.bchPriceReceiver.send(current)
+    })
+})

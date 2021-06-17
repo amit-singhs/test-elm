@@ -9,7 +9,7 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import Html exposing (Html)
+import Html exposing (Html, address)
 import Main exposing (Msg(..))
 import QRCode
 import Svg.Attributes as SvgA
@@ -19,23 +19,16 @@ import UxComponents
 
 -- TODO
 -- + implement QR code, when pay button is pressed.
--- - *Show QR code only when pay button is pressed.
+-- + Show QR code only when pay button is pressed.
 -- - Refactor the input.text box for the amount display field to a simple el
 -- - Implement USD to BCH Conversion.exposing
 -- - Fetch the BCH price from fullstack.cash API.
 -- GLOBALS
-
-
-bchUsdPrice =
-    700.0
-
-
-
 -- UTILITIES
 
 
-convertUsdToBch : Float -> Float
-convertUsdToBch usd =
+convertUsdToBch : Float -> Float -> Float
+convertUsdToBch usd bchUsdPrice =
     usd / bchUsdPrice
 
 
@@ -59,6 +52,12 @@ main =
 port getCashAddress : () -> Cmd msg
 
 
+port getBchPrice : () -> Cmd msg
+
+
+port bchPriceReceiver : (Float -> msg) -> Sub msg
+
+
 port cashAddressReceiver : (String -> msg) -> Sub msg
 
 
@@ -75,6 +74,7 @@ type alias Model =
     , decimalButtonIsOn : Bool
     , walletAddress : Maybe String
     , showModal : Bool
+    , bchUsdPrice : Maybe Float
     }
 
 
@@ -98,6 +98,7 @@ type Msg
     | DecimalButtonPressed
     | AddButtonPressed
     | CashAddressRecv String
+    | BchUSDPriceRecv Float
     | DisplayModal
     | HideModal
 
@@ -195,8 +196,12 @@ init _ =
       , decimalButtonIsOn = False
       , walletAddress = Nothing
       , showModal = False
+      , bchUsdPrice = Nothing
       }
-    , getCashAddress ()
+    , Cmd.batch
+        [ getCashAddress ()
+        , getBchPrice ()
+        ]
     )
 
 
@@ -285,6 +290,11 @@ update msg model =
             , Cmd.none
             )
 
+        BchUSDPriceRecv bchUsdPriceRecvd ->
+            ( { model | bchUsdPrice = Just bchUsdPriceRecvd }
+            , Cmd.none
+            )
+
 
 
 -- SUBSCRIPTIONS
@@ -292,21 +302,30 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    cashAddressReceiver CashAddressRecv
+    Sub.batch
+        [ cashAddressReceiver CashAddressRecv
+        , bchPriceReceiver BchUSDPriceRecv
+        ]
 
 
 
 -- VIEWS
 
 
-buildCashDataURI : String -> NumberType -> String
-buildCashDataURI address total =
-    address
-        ++ "?total="
-        ++ String.fromFloat
-            (convertUsdToBch <|
-                renderNumberTypetoFloat total
-            )
+buildCashDataURI : String -> NumberType -> Maybe Float -> String
+buildCashDataURI address totalInUSD maybeBchUsdPrice =
+    case maybeBchUsdPrice of
+        Nothing ->
+            address
+
+        Just bchUsdPrice ->
+            address
+                ++ "?total="
+                ++ String.fromFloat
+                    (convertUsdToBch
+                        (renderNumberTypetoFloat totalInUSD)
+                        bchUsdPrice
+                    )
 
 
 qrCodeView : Model -> Element msg
@@ -316,7 +335,7 @@ qrCodeView model =
             Just address ->
                 let
                     dataURI =
-                        buildCashDataURI address model.total
+                        buildCashDataURI address model.total model.bchUsdPrice
                 in
                 Element.column []
                     [ Element.row [ centerX ]
