@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm run clean && cd public && parcel build --cache-dir ./.cache -d ./dist index.html",
+    "build": "npm run clean && parcel build --cache-dir ./.cache -d ./dist index.html",
     "start-old": "elm-live src/PortsPos.elm --hot --start-page=public/index.html -- --debug --output=public/main.js",
     "start": "parcel -d ./dist --cache-dir ./.cache index.html",
     "clean": "rm -rf ./dist"
