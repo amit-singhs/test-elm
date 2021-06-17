@@ -19,6 +19,14 @@ type alias ModalConfig msg =
     }
 
 
+edges =
+    { left = 0
+    , right = 0
+    , top = 0
+    , bottom = 0
+    }
+
+
 viewModalPlaceholder : Bool -> ModalConfig msg -> Element msg
 viewModalPlaceholder showModal modalConfig =
     if showModal == False then
@@ -43,21 +51,11 @@ viewModalPlaceholder showModal modalConfig =
                     , Font.size 30
                     , width fill
                     , paddingXY 0 10
-                    , Border.widthEach
-                        { bottom = 1
-                        , left = 0
-                        , right = 0
-                        , top = 0
-                        }
+                    , Border.widthEach { edges | bottom = 1 }
                     ]
                     [ column
                         [ width <| fillPortion 40
-                        , paddingEach
-                            { bottom = 0
-                            , left = 0
-                            , right = 50
-                            , top = 0
-                            }
+                        , paddingEach { edges | right = 50 }
                         ]
                         [ text modalConfig.title ]
                     , column [ width <| fillPortion 1, Events.onClick modalConfig.onClose ]
@@ -69,12 +67,7 @@ viewModalPlaceholder showModal modalConfig =
                         ]
                     ]
                 , row
-                    [ Border.widthEach
-                        { bottom = 1
-                        , left = 0
-                        , right = 0
-                        , top = 0
-                        }
+                    [ Border.widthEach { edges | bottom = 1 }
                     , paddingXY 0 25
                     , width fill
                     ]
