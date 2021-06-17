@@ -5,6 +5,7 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
+import Element.Input as Input
 import Element.Region as Region
 import Heroicons.Solid as Heroicons
 import Palette
@@ -28,13 +29,14 @@ viewModalPlaceholder showModal modalConfig =
             [ width fill
             , height fill
             , Background.color Palette.overlayBGColor
+            , Events.onClick modalConfig.onClose
             ]
             [ column
                 [ Background.color Palette.white
                 , centerX
                 , centerY
                 , padding 25
-                , Border.rounded 5
+                , Border.rounded 10
                 ]
                 [ row
                     [ Region.heading 1
@@ -81,6 +83,10 @@ viewModalPlaceholder showModal modalConfig =
                     [ paddingXY 0 15
                     , alignRight
                     ]
-                    [ text "Close" ]
+                    [ Input.button []
+                        { onPress = Just modalConfig.onClose
+                        , label = text "Close"
+                        }
+                    ]
                 ]
             ]
