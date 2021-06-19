@@ -20,9 +20,11 @@ import UxComponents
 -- TODO
 -- + implement QR code, when pay button is pressed.
 -- + Show QR code only when pay button is pressed.
--- - Refactor the input.text box for the amount display field to a simple el
--- + Implement USD to BCH Conversion.exposing
 -- + Fetch the BCH price from fullstack.cash API.
+-- + Implement USD to BCH Conversion.exposing
+-- - Refactor the input.text box for the amount display field to a simple el
+-- - Rename DisplayModal to DisplayQRCode, same with HideMOdal.
+-- - Remove all reference to the world modal, and change it to QRCode.
 -- GLOBALS
 -- UTILITIES
 
@@ -98,6 +100,29 @@ type alias Model =
     , bchUsdPrice : Maybe Float
     , addressBalance : Maybe Float
     }
+
+
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { displayedNumber = Integer 0
+      , inputNumber = Integer 0
+      , numbersList = []
+      , total = Integer 0
+      , operationType = Nothing
+      , decimalButtonIsOn = False
+      , wallet = Nothing
+      , showModal = False
+      , bchUsdPrice = Nothing
+      , mnemonic = Nothing
+      , addressBalance = Nothing
+
+      --   , itemValue = Nothing
+      }
+    , Cmd.batch
+        [ getBchPrice ()
+        , getWalletFromLocalStorage "wallet"
+        ]
+    )
 
 
 type Operation
@@ -210,29 +235,6 @@ addTwoNumberTypes numType1 numType2 =
                     renderFloatToNumberType (renderNumberTypetoFloat numType1 + renderNumberTypetoFloat numType2)
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( { displayedNumber = Integer 0
-      , inputNumber = Integer 0
-      , numbersList = []
-      , total = Integer 0
-      , operationType = Nothing
-      , decimalButtonIsOn = False
-      , wallet = Nothing
-      , showModal = False
-      , bchUsdPrice = Nothing
-      , mnemonic = Nothing
-      , addressBalance = Nothing
-
-      --   , itemValue = Nothing
-      }
-    , Cmd.batch
-        [ getBchPrice ()
-        , getWalletFromLocalStorage "wallet"
-        ]
-    )
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -303,21 +305,6 @@ update msg model =
             , Cmd.none
             )
 
-        CashAddressRecv address ->
-            ( { model | wallet = Just address }
-            , Cmd.none
-            )
-
-        DisplayModal ->
-            ( { model | showModal = True }
-            , Cmd.none
-            )
-
-        HideModal ->
-            ( { model | showModal = False }
-            , Cmd.none
-            )
-
         BchUSDPriceRecv bchUsdPriceRecvd ->
             ( { model | bchUsdPrice = Just bchUsdPriceRecvd }
             , Cmd.none
@@ -328,8 +315,28 @@ update msg model =
             , getCashAddress mnemonic
             )
 
+        CashAddressRecv address ->
+            ( { model | wallet = Just address }
+            , Cmd.none
+            )
+
         BalanceRecv balance ->
             ( { model | addressBalance = Just balance }
+            , Cmd.none
+            )
+
+        DisplayModal ->
+            ( { model | showModal = True }
+            , case model.wallet of
+                Just address ->
+                    fetchAddressBalance address
+
+                Nothing ->
+                    Cmd.none
+            )
+
+        HideModal ->
+            ( { model | showModal = False }
             , Cmd.none
             )
 
@@ -378,7 +385,18 @@ qrCodeView model =
                         buildCashDataURI address model.total model.bchUsdPrice
                 in
                 Element.column []
-                    [ Element.row [ centerX ]
+                    [ Element.row []
+                        [ Element.column [] [ text "Balance : " ]
+                        , Element.column []
+                            [ case model.addressBalance of
+                                Nothing ->
+                                    text "Unavailable"
+
+                                Just balance ->
+                                    text <| String.fromFloat balance
+                            ]
+                        ]
+                    , Element.row [ centerX ]
                         [ html
                             (QRCode.fromStringWith QRCode.High dataURI
                                 |> Result.map

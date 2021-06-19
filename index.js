@@ -41,3 +41,11 @@ app.ports.getWalletFromLocalStorage.subscribe(itemName => {
     let mnemonic = localStorage.getItem('wallet');
     app.ports.mnemonicFromLocalStorageReceiver.send(mnemonic)
 })
+
+
+app.ports.fetchAddressBalance.subscribe(address => {
+    bchjs.Electrumx.balance(address).then(balance => {
+        console.log(balance)
+        app.ports.addressBalanceReceiver.send(balance.balance.confirmed + balance.balance.unconfirmed)
+    })
+})
