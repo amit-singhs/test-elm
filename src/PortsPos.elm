@@ -21,8 +21,8 @@ import UxComponents
 -- + implement QR code, when pay button is pressed.
 -- + Show QR code only when pay button is pressed.
 -- - Refactor the input.text box for the amount display field to a simple el
--- - Implement USD to BCH Conversion.exposing
--- - Fetch the BCH price from fullstack.cash API.
+-- + Implement USD to BCH Conversion.exposing
+-- + Fetch the BCH price from fullstack.cash API.
 -- GLOBALS
 -- UTILITIES
 
@@ -49,7 +49,10 @@ main =
 -- PORTS
 
 
-port getCashAddress : () -> Cmd msg
+port getCashAddress : Mnemonic -> Cmd msg
+
+
+port cashAddressReceiver : (String -> msg) -> Sub msg
 
 
 port getBchPrice : () -> Cmd msg
@@ -58,11 +61,28 @@ port getBchPrice : () -> Cmd msg
 port bchPriceReceiver : (Float -> msg) -> Sub msg
 
 
-port cashAddressReceiver : (String -> msg) -> Sub msg
+port getWalletFromLocalStorage : String -> Cmd msg
+
+
+port mnemonicFromLocalStorageReceiver : (Mnemonic -> msg) -> Sub msg
+
+
+port fetchAddressBalance : Address -> Cmd msg
+
+
+port addressBalanceReceiver : (Float -> msg) -> Sub msg
 
 
 
 -- MODEL
+
+
+type alias Address =
+    String
+
+
+type alias Mnemonic =
+    String
 
 
 type alias Model =
@@ -72,9 +92,11 @@ type alias Model =
     , numbersList : List NumberType
     , total : NumberType
     , decimalButtonIsOn : Bool
-    , walletAddress : Maybe String
+    , wallet : Maybe Address
+    , mnemonic : Maybe Mnemonic
     , showModal : Bool
     , bchUsdPrice : Maybe Float
+    , addressBalance : Maybe Float
     }
 
 
@@ -99,6 +121,8 @@ type Msg
     | AddButtonPressed
     | CashAddressRecv String
     | BchUSDPriceRecv Float
+    | MnemonicRecv Mnemonic
+    | BalanceRecv Float
     | DisplayModal
     | HideModal
 
@@ -194,13 +218,17 @@ init _ =
       , total = Integer 0
       , operationType = Nothing
       , decimalButtonIsOn = False
-      , walletAddress = Nothing
+      , wallet = Nothing
       , showModal = False
       , bchUsdPrice = Nothing
+      , mnemonic = Nothing
+      , addressBalance = Nothing
+
+      --   , itemValue = Nothing
       }
     , Cmd.batch
-        [ getCashAddress ()
-        , getBchPrice ()
+        [ getBchPrice ()
+        , getWalletFromLocalStorage "wallet"
         ]
     )
 
@@ -276,7 +304,7 @@ update msg model =
             )
 
         CashAddressRecv address ->
-            ( { model | walletAddress = Just address }
+            ( { model | wallet = Just address }
             , Cmd.none
             )
 
@@ -295,16 +323,28 @@ update msg model =
             , Cmd.none
             )
 
+        MnemonicRecv mnemonic ->
+            ( { model | mnemonic = Just mnemonic }
+            , getCashAddress mnemonic
+            )
+
+        BalanceRecv balance ->
+            ( { model | addressBalance = Just balance }
+            , Cmd.none
+            )
+
 
 
 -- SUBSCRIPTIONS
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.batch
         [ cashAddressReceiver CashAddressRecv
         , bchPriceReceiver BchUSDPriceRecv
+        , mnemonicFromLocalStorageReceiver MnemonicRecv
+        , addressBalanceReceiver BalanceRecv
         ]
 
 
@@ -331,7 +371,7 @@ buildCashDataURI address totalInUSD maybeBchUsdPrice =
 qrCodeView : Model -> Element msg
 qrCodeView model =
     Element.el [] <|
-        case model.walletAddress of
+        case model.wallet of
             Just address ->
                 let
                     dataURI =

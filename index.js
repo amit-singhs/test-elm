@@ -6,12 +6,9 @@ let bchjs = new BCHJS() // Defaults to BCHN network.
 var app = Elm.PortsPos.init({
     node: document.getElementById("elm-node")
 });
-
-app.ports.getCashAddress.subscribe(_ => {
+app.ports.getCashAddress.subscribe(mnemonic => {
     // create mnemonic
     //let mnemonic = bchjs.Mnemonic.generate(128);
-    let mnemonic = localStorage.getItem('wallet');
-    console.log(mnemonic)
     restoreWalletFromMnenomic(mnemonic).then(cashAddress => {
         app.ports.cashAddressReceiver.send(cashAddress)
 
@@ -26,8 +23,8 @@ app.ports.getBchPrice.subscribe(_ => {
     })
 })
 
-let restoreWalletFromMnenomic = mnenomic => {
-    if (mnenomic) {
+let restoreWalletFromMnenomic = mnemonic => {
+    if (mnemonic) {
         return bchjs.Mnemonic.toSeed(mnemonic).then(seedBuffer => {
             // create HDNode from seed buffer
             let hdNode = bchjs.HDNode.fromSeed(seedBuffer);
@@ -39,3 +36,8 @@ let restoreWalletFromMnenomic = mnenomic => {
     }
     return Promise.reject("No Wallet found in localStorage")
 }
+
+app.ports.getWalletFromLocalStorage.subscribe(itemName => {
+    let mnemonic = localStorage.getItem('wallet');
+    app.ports.mnemonicFromLocalStorageReceiver.send(mnemonic)
+})
