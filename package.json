@@ -25,7 +25,8 @@
     "elm-format": "^0.8.4",
     "elm-hot": "^1.1.6",
     "node-elm-compiler": "^5.0.6",
-    "parcel-bundler": "^1.12.5"
+    "parcel-bundler": "^1.12.5",
+    "vercel": "^23.0.1"
   },
   "dependencies": {
     "@psf/bch-js": "^4.18.4",
